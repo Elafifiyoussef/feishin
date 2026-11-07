@@ -36,7 +36,7 @@ export const UndoDialogBody = ({ last, onBusyChange, onClose, onDone }: UndoDial
         setResult(outcome);
         setPhase('finished');
         if (outcome.restored > 0) {
-            afterLuboxChange(queryClient);
+            afterLuboxChange(queryClient, { fast: last.kind === 'trash' });
             onDone?.();
         }
     };

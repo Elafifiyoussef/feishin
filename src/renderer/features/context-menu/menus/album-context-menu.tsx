@@ -11,6 +11,7 @@ import { SetFavoriteAction } from '/@/renderer/features/context-menu/actions/set
 import { SetRatingAction } from '/@/renderer/features/context-menu/actions/set-rating-action';
 import { ShareAction } from '/@/renderer/features/context-menu/actions/share-action';
 import { ContextMenuPreview } from '/@/renderer/features/context-menu/components/context-menu-preview';
+import { LuboxMenuGroup } from '/@/renderer/features/lubox/menu/lubox-menu-group';
 import { ContextMenu } from '/@/shared/components/context-menu/context-menu';
 import { Album, LibraryItem } from '/@/shared/types/domain-types';
 
@@ -42,6 +43,7 @@ export const AlbumContextMenu = ({ items, type }: AlbumContextMenuProps) => {
             <ContextMenu.Divider />
             <GoToAction items={items} />
             <ContextMenu.Divider />
+            <LuboxMenuGroup albumIds={ids} />
             <EditMetadataAction albumIds={ids} />
             <GetInfoAction disabled={items.length === 0} items={items} />
         </ContextMenu.Content>

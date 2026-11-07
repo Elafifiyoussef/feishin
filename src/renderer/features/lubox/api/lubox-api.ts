@@ -22,6 +22,9 @@ import {
     TrackIdsResponse,
     TrackSort,
     TracksResponse,
+    TrashPurgeResult,
+    TrashResponse,
+    TrashRestoreResult,
 } from '/@/renderer/features/lubox/api/types';
 import { BatchAction } from '/@/renderer/features/lubox/lib/batch';
 
@@ -33,7 +36,45 @@ export const luboxKeys = {
     lastBatch: () => [...luboxKeys.all, 'last-batch'] as const,
     tracks: (filter: TrackFilter) => [...luboxKeys.all, 'tracks', filter] as const,
     tracksAll: () => [...luboxKeys.all, 'tracks'] as const,
+    trash: () => [...luboxKeys.all, 'trash'] as const,
 };
+
+export const TRASH_PAGE_SIZE = 60;
+
+/** GET /trash, newest first, 60 at a time. */
+export const luboxTrashQueries = {
+    list: () =>
+        infiniteQueryOptions<
+            TrashResponse,
+            Error,
+            InfiniteData<TrashResponse, number>,
+            ReturnType<typeof luboxKeys.trash>,
+            number
+        >({
+            getNextPageParam: (last, pages) => {
+                const loaded = pages.reduce((n, page) => n + page.items.length, 0);
+                return loaded < last.total ? loaded : undefined;
+            },
+            initialPageParam: 0,
+            queryFn: ({ pageParam, signal }) =>
+                luboxFetch<TrashResponse>('/trash', {
+                    query: { limit: TRASH_PAGE_SIZE, offset: pageParam },
+                    signal,
+                }),
+            queryKey: luboxKeys.trash(),
+            retry: false,
+        }),
+};
+
+/** POST /trash/purge: erases the trash folders for good. Name the tracks, or `all`. */
+export const purgeTrash = (target: { all: true } | { video_ids: string[] }) =>
+    luboxFetch<TrashPurgeResult>('/trash/purge', { body: target, method: 'POST' });
+
+export const restoreFromTrash = (ids: string[]) =>
+    luboxFetch<TrashRestoreResult>('/trash/restore', {
+        body: { video_ids: ids },
+        method: 'POST',
+    });
 
 export const TRACKS_PAGE_SIZE = 60;
 

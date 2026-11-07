@@ -73,8 +73,9 @@ export const BatchDialogBody = ({
 }: BatchDialogProps) => {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
-    const onChanged = () => {
-        afterLuboxChange(queryClient);
+    // a trash removes the tracks from lubox's lists at once; Feishin's follow after the quick rescan
+    const onChanged = (removed?: string[]) => {
+        afterLuboxChange(queryClient, { fast: actionKey === 'delete', removed });
         onDone?.();
     };
     const { data: albums } = useQuery({
@@ -179,7 +180,14 @@ export const BatchDialogBody = ({
             stoppedAt: result.stopped && result.seen < plan.items.length ? result.seen : null,
         });
         setPhase('finished');
-        if (result.done > 0) onChanged();
+        if (result.done > 0) {
+            const failedIds = new Set(result.failed.map((f) => f.video_id));
+            onChanged(
+                isTrash
+                    ? plan.items.map((i) => i.video_id).filter((id) => !failedIds.has(id))
+                    : undefined,
+            );
+        }
     };
 
     // Undo right after a run: lubox's undo is global and one level, so make sure the last batch is still ours

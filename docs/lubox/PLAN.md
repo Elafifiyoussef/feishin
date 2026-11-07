@@ -57,7 +57,7 @@ Design choices that keep upstream edits to near zero:
 | `src/renderer/features/sidebar/components/collapsed-sidebar.tsx` | same, compact form | ~2 |
 | `src/renderer/features/sidebar/components/mobile-sidebar.tsx` | same, mobile form | ~2 |
 
-That is 4 files, about 10 lines. **Actual after Phase 1: 4 upstream files, +11/-2 lines** (the section is an `Accordion.Item` mounted inside the sidebar's accordion, so `'lubox'` is added to its `defaultValue`; mounted after the accordion it rendered off-screen) (verify with
+That is 4 files, about 10 lines. **Later additions: `song-context-menu.tsx` and `album-context-menu.tsx` each mount `<LuboxMenuGroup />` (2 lines each), so 6 upstream files in total.** **Actual after Phase 1: 4 upstream files, +11/-2 lines** (the section is an `Accordion.Item` mounted inside the sidebar's accordion, so `'lubox'` is added to its `defaultValue`; mounted after the accordion it rendered off-screen) (verify with
 `git diff --stat`). New non-upstream files outside the feature folder: `Dockerfile.lubox`,
 `docker/lubox/ng.conf.template`, `web.lubox.vite.config.ts` (dev server with the `/lubox` proxy and an
 `optimizeDeps` fix for the atlaskit dev-server issue), `.claude/launch.json`. Dev run:

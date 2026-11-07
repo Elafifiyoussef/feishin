@@ -8,6 +8,7 @@ import { DownloaderPage } from '/@/renderer/features/lubox/downloader/downloader
 import '/@/renderer/features/lubox/i18n/register';
 import { LibraryPage } from '/@/renderer/features/lubox/library/library-page';
 import { InvalidRoute } from '/@/renderer/features/lubox/routes/invalid-route';
+import { TrashPage } from '/@/renderer/features/lubox/trash/trash-page';
 
 const DownloadPage = () => {
     const { t } = useTranslation();
@@ -36,6 +37,7 @@ const LuboxRoute = () => (
         <Route element={<Navigate replace to={LuboxPath.DOWNLOAD} />} index />
         <Route element={<DownloadPage />} path="download" />
         <Route element={<LibraryPage />} path="library" />
+        <Route element={<TrashPage />} path="trash" />
         <Route element={<TrackPage />} path="track/:videoId" />
         <Route element={<InvalidRoute />} path="*" />
     </Routes>

@@ -1,12 +1,19 @@
-import { QueryClient } from '@tanstack/react-query';
+import { InfiniteData, QueryClient } from '@tanstack/react-query';
 
+import { api } from '/@/renderer/api';
 import { luboxKeys } from '/@/renderer/features/lubox/api/lubox-api';
+import { TracksResponse } from '/@/renderer/features/lubox/api/types';
+import { useAuthStore } from '/@/renderer/store/auth.store';
 
 /**
- * lubox writes the files at once and trusts Navidrome to rescan 60 s after the last change, so
- * Feishin's own lists keep the old tags for a little while. The refetch below runs once after that.
+ * lubox asks Navidrome for a rescan about 3 s after a removal (trash, undo of a trash, removed copy) and
+ * about 60 s after the last edit. Feishin's own lists keep the old data until that scan has finished.
  */
-export const NAVIDROME_REFRESH_DELAY_MS = 75_000;
+export const NAVIDROME_REMOVAL_DELAY_MS = 3_500;
+export const NAVIDROME_EDIT_DELAY_MS = 62_000;
+
+const SCAN_POLL_MS = 1_500;
+const SCAN_POLL_MAX = 40;
 
 // Feishin keys its server data as [serverId, resource, ...]
 const FEISHIN_RESOURCES = new Set([
@@ -15,21 +22,75 @@ const FEISHIN_RESOURCES = new Set([
     'artists',
     'genres',
     'playlists',
+    'search',
     'songs',
 ]);
 
-/** Refresh what a lubox change made out of date: lubox's own data now, Feishin's lists after the rescan. */
-export function afterLuboxChange(queryClient: QueryClient) {
+interface AfterChangeOptions {
+    /** a change that removes or restores files: the scan starts almost at once */
+    fast?: boolean;
+    /** video ids that are gone now: dropped from lubox's lists without waiting for a refetch */
+    removed?: string[];
+}
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Refresh what a lubox change made out of date: lubox's own data now, Feishin's lists once the rescan is done. */
+export function afterLuboxChange(queryClient: QueryClient, options: AfterChangeOptions = {}) {
+    if (options.removed?.length) dropFromLuboxLists(queryClient, options.removed);
+
     queryClient.invalidateQueries({ queryKey: luboxKeys.tracksAll() });
     queryClient.invalidateQueries({ queryKey: luboxKeys.albums() });
     queryClient.invalidateQueries({ queryKey: luboxKeys.lastBatch() });
 
-    setTimeout(() => {
-        queryClient.invalidateQueries({
-            predicate: (query) =>
-                query.queryKey[0] !== luboxKeys.all[0] &&
-                typeof query.queryKey[1] === 'string' &&
-                FEISHIN_RESOURCES.has(query.queryKey[1]),
-        });
-    }, NAVIDROME_REFRESH_DELAY_MS);
+    const serverId = useAuthStore.getState().currentServer?.id ?? '';
+    const delay = options.fast ? NAVIDROME_REMOVAL_DELAY_MS : NAVIDROME_EDIT_DELAY_MS;
+
+    setTimeout(async () => {
+        if (serverId) await waitForScan(serverId);
+        refreshFeishin(queryClient);
+    }, delay);
+}
+
+function dropFromLuboxLists(queryClient: QueryClient, removed: string[]) {
+    const gone = new Set(removed);
+    queryClient.setQueriesData<InfiniteData<TracksResponse, number>>(
+        { queryKey: luboxKeys.tracksAll() },
+        (data) => {
+            if (!data) return data;
+            return {
+                ...data,
+                pages: data.pages.map((page) => {
+                    const items = page.items.filter((track) => !gone.has(track.video_id));
+                    return {
+                        ...page,
+                        items,
+                        total: Math.max(0, page.total - (page.items.length - items.length)),
+                    };
+                }),
+            };
+        },
+    );
+}
+
+function refreshFeishin(queryClient: QueryClient) {
+    queryClient.invalidateQueries({
+        predicate: (query) =>
+            query.queryKey[0] !== luboxKeys.all[0] &&
+            typeof query.queryKey[1] === 'string' &&
+            FEISHIN_RESOURCES.has(query.queryKey[1]),
+    });
+}
+
+/** Wait until Navidrome reports that no scan is running. Gives up quietly: the refetch then runs anyway. */
+async function waitForScan(serverId: string) {
+    for (let i = 0; i < SCAN_POLL_MAX; i += 1) {
+        try {
+            const status = await api.controller.getScanStatus({ apiClientProps: { serverId } });
+            if (!status.scanning) return;
+        } catch {
+            return;
+        }
+        await wait(SCAN_POLL_MS);
+    }
 }

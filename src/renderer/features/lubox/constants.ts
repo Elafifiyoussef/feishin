@@ -9,6 +9,7 @@ export const LuboxPath = {
     LIBRARY: '/lubox/library',
     ROOT: '/lubox',
     TRACK: '/lubox/track',
+    TRASH: '/lubox/trash',
 } as const;
 
 /** Splat route registered once in the app router. */

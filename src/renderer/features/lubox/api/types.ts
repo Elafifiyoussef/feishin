@@ -161,3 +161,42 @@ export interface TracksResponse {
     items: LuboxTrack[];
     total: number;
 }
+
+/** A track moved to lubox's trash. Shape proposed to lubox, to be confirmed. */
+export interface TrashItem {
+    album: null | string;
+    artist: null | string;
+    batch: null | string;
+    copies: number;
+    files: string[];
+    /** downloaded again since: the trashed folder only holds an old file */
+    in_library: boolean;
+    /** why it can not be restored (null when it can) */
+    reason: null | string;
+    restorable: boolean;
+    /** bytes, all files of the track */
+    size: null | number;
+    title: null | string;
+    /** unix seconds */
+    trashed_at: null | number;
+    video_id: string;
+}
+
+export interface TrashPurgeResult {
+    failed: BatchFailure[];
+    /** bytes freed */
+    freed: number;
+    purged: string[];
+}
+
+export interface TrashResponse {
+    items: TrashItem[];
+    /** bytes, the whole trash */
+    size: number;
+    total: number;
+}
+
+export interface TrashRestoreResult {
+    failed: BatchFailure[];
+    restored: string[];
+}

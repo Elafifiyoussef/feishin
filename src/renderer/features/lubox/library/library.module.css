@@ -198,6 +198,13 @@
 }
 
 /* Feishin shows a floating menu button at the bottom left on phones: keep the bar clear of it */
+/* the floating menu button of the compact layout sits over the bottom-left corner */
+@media (width < 1024px) {
+    .selection-bar {
+        padding-left: 4.5rem;
+    }
+}
+
 @media (width < 640px) {
     .selection-bar {
         padding-bottom: calc(var(--theme-spacing-sm) + 2.5rem);
