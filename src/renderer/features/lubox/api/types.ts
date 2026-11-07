@@ -1,5 +1,44 @@
 /** Response shapes of the lubox backend (app/routes.py, app/store.py, app/jobs.py). */
 
+export interface AlbumsResponse {
+    albums: { album: string; count: number }[];
+    /** tracks that are in no album */
+    none: number;
+}
+
+export interface BatchApplyResult {
+    done: number;
+    failed: BatchFailure[];
+}
+
+export interface BatchFailure {
+    error: string;
+    video_id: string;
+}
+
+export interface BatchPlan {
+    items: BatchPlanItem[];
+    playlist_title: null | string;
+    /** tracks left out, each with the reason */
+    skipped: { reason: string; title: string; video_id: string }[];
+    type: 'clear_album' | 'delete' | 'playlist' | 'set' | 'single';
+}
+
+export interface BatchPlanItem {
+    /** what each field is now, for the fields that would change */
+    before?: Record<string, string>;
+    /** the new value of each field that would change (edits only) */
+    changes?: Record<string, string>;
+    title: string;
+    video_id: string;
+}
+
+export interface BatchUndoResult {
+    failed: BatchFailure[];
+    remaining: number;
+    restored: number;
+}
+
 export interface CheckEntry {
     duration?: null | number;
     id: null | string;
@@ -46,6 +85,8 @@ export interface DownloadItem {
     video_id: string;
 }
 
+// --- library ------------------------------------------------------------------------------------------------
+
 export interface DownloadResponse {
     jobs: { job_id: number; state: string; video_id: string }[];
 }
@@ -76,9 +117,47 @@ export interface JobsResponse {
 
 export type JobState = 'canceled' | 'done' | 'failed' | 'queued' | 'running' | 'skipped';
 
+// --- batch actions (ADR-0005 in lubox) ------------------------------------------------------------------------
+
+export interface LastBatch {
+    count: number;
+    id: string;
+    kind: 'edit' | 'trash';
+    label: string;
+}
+
+export interface LuboxTrack {
+    added_at: null | number;
+    album: null | string;
+    /** how many albums the song is in: 1 main file plus its copies */
+    albums: number;
+    artist: null | string;
+    date: null | string;
+    duration: null | number;
+    /** title, artist or date was changed by hand */
+    edited: boolean;
+    /** the file is gone from disk */
+    missing: boolean;
+    title: null | string;
+    track: null | number | string;
+    video_id: string;
+}
+
 export interface PauseState {
     backoff: number;
     paused: boolean;
     paused_until: null | number;
     reason: null | string;
+}
+
+export interface TrackIdsResponse {
+    capped: boolean;
+    ids: string[];
+}
+
+export type TrackSort = 'added' | 'album' | 'artist' | 'date' | 'title';
+
+export interface TracksResponse {
+    items: LuboxTrack[];
+    total: number;
 }

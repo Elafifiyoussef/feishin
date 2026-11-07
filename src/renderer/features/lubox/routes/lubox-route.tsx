@@ -6,6 +6,7 @@ import { LuboxStatusProbe } from '/@/renderer/features/lubox/components/lubox-st
 import { LuboxPath } from '/@/renderer/features/lubox/constants';
 import { DownloaderPage } from '/@/renderer/features/lubox/downloader/downloader-page';
 import '/@/renderer/features/lubox/i18n/register';
+import { LibraryPage } from '/@/renderer/features/lubox/library/library-page';
 import { InvalidRoute } from '/@/renderer/features/lubox/routes/invalid-route';
 
 const DownloadPage = () => {
@@ -17,10 +18,10 @@ const DownloadPage = () => {
     );
 };
 
-const LibraryPage = () => {
+const TrackPage = () => {
     const { t } = useTranslation();
     return (
-        <LuboxPage title={t('lubox.pages.library.title')}>
+        <LuboxPage title={t('lubox.pages.track.title')}>
             <LuboxStatusProbe />
         </LuboxPage>
     );
@@ -35,6 +36,7 @@ const LuboxRoute = () => (
         <Route element={<Navigate replace to={LuboxPath.DOWNLOAD} />} index />
         <Route element={<DownloadPage />} path="download" />
         <Route element={<LibraryPage />} path="library" />
+        <Route element={<TrackPage />} path="track/:videoId" />
         <Route element={<InvalidRoute />} path="*" />
     </Routes>
 );

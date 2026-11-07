@@ -1,0 +1,209 @@
+.page {
+    width: 100%;
+    padding: var(--theme-spacing-md);
+    container-type: inline-size;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--theme-spacing-sm);
+    align-items: center;
+}
+
+.toolbar-field {
+    flex: 1 1 11rem;
+    max-width: 16rem;
+}
+
+.toolbar-field-sort {
+    flex-basis: 9rem;
+    max-width: 11rem;
+}
+
+.toolbar-spacer {
+    flex: 1;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    list-style: none;
+    border: 1px solid var(--theme-colors-border);
+    border-radius: var(--theme-radius-md);
+}
+
+/* One track row. In select mode it is a checkbox; otherwise a link to the track page. */
+.row {
+    display: grid;
+    grid-template-columns: auto 2.5rem minmax(0, 1fr) 4rem;
+    gap: var(--theme-spacing-md);
+    align-items: center;
+    padding: var(--theme-spacing-sm) var(--theme-spacing-md);
+    color: inherit;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--theme-colors-border);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: var(--theme-colors-surface);
+    }
+
+    &:focus-visible {
+        outline: 1px solid var(--theme-colors-primary-filled);
+        outline-offset: -1px;
+    }
+
+    &[data-selected='true'] {
+        background: var(--theme-colors-primary-transparent);
+    }
+}
+
+.row-album,
+.row-added {
+    display: none;
+}
+
+@container (min-width: 44rem) {
+    .row {
+        grid-template-columns: auto 2.5rem minmax(0, 1fr) minmax(0, 14rem) 4rem 6rem;
+    }
+
+    .row-album,
+    .row-added {
+        display: block;
+    }
+}
+
+.check {
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+}
+
+.title-line {
+    display: flex;
+    gap: var(--theme-spacing-sm);
+    align-items: center;
+    min-width: 0;
+    font-size: var(--theme-font-size-md);
+    font-weight: 500;
+    color: var(--theme-colors-foreground);
+}
+
+.title-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sub {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--theme-font-size-sm);
+    color: var(--theme-colors-foreground-muted);
+    white-space: nowrap;
+}
+
+.muted {
+    font-size: var(--theme-font-size-sm);
+    color: var(--theme-colors-foreground-muted);
+}
+
+.num {
+    text-align: right;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: var(--theme-spacing-md);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-sm);
+    padding: var(--theme-spacing-sm);
+    color: inherit;
+    cursor: pointer;
+    user-select: none;
+    background: var(--theme-colors-surface);
+    border-radius: var(--theme-radius-md);
+
+    &:hover {
+        background: lighten(var(--theme-colors-surface), 4%);
+    }
+
+    &:focus-visible {
+        outline: 1px solid var(--theme-colors-primary-filled);
+    }
+
+    &[data-selected='true'] {
+        outline: 2px solid var(--theme-colors-primary);
+    }
+}
+
+.card-check {
+    position: absolute;
+    top: var(--theme-spacing-md);
+    left: var(--theme-spacing-md);
+    z-index: 1;
+    padding: var(--theme-spacing-xs);
+    pointer-events: none;
+    background: var(--theme-colors-background);
+    border-radius: var(--theme-radius-sm);
+}
+
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--theme-spacing-xs);
+}
+
+.more {
+    display: flex;
+    justify-content: center;
+    padding: var(--theme-spacing-lg) 0;
+}
+
+.selection-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--theme-spacing-sm) var(--theme-spacing-md);
+    align-items: center;
+    padding: var(--theme-spacing-sm) var(--theme-spacing-md);
+    background: var(--theme-colors-background);
+    border-top: 1px solid var(--theme-colors-border);
+}
+
+.selection-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--theme-spacing-sm);
+    margin-left: auto;
+}
+
+/* Feishin shows a floating menu button at the bottom left on phones: keep the bar clear of it */
+@media (width < 640px) {
+    .selection-bar {
+        padding-bottom: calc(var(--theme-spacing-sm) + 2.5rem);
+    }
+
+    .selection-actions {
+        margin-left: 0;
+    }
+}

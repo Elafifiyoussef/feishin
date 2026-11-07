@@ -1,24 +1,68 @@
-import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    InfiniteData,
+    infiniteQueryOptions,
+    queryOptions,
+    useMutation,
+    useQueryClient,
+} from '@tanstack/react-query';
 
 import { luboxFetch } from '/@/renderer/features/lubox/api/client';
 import {
+    AlbumsResponse,
+    BatchApplyResult,
+    BatchPlan,
+    BatchUndoResult,
     CheckResponse,
     DownloadItem,
     DownloadResponse,
     Job,
     JobsResponse,
+    LastBatch,
     PauseState,
+    TrackIdsResponse,
+    TrackSort,
+    TracksResponse,
 } from '/@/renderer/features/lubox/api/types';
+import { BatchAction } from '/@/renderer/features/lubox/lib/batch';
 
 /** Query keys for lubox data. Prefixed so they never collide with Feishin's server-scoped keys. */
 export const luboxKeys = {
+    albums: () => [...luboxKeys.all, 'albums'] as const,
     all: ['lubox'] as const,
     jobs: () => [...luboxKeys.all, 'jobs'] as const,
+    lastBatch: () => [...luboxKeys.all, 'last-batch'] as const,
+    tracks: (filter: TrackFilter) => [...luboxKeys.all, 'tracks', filter] as const,
+    tracksAll: () => [...luboxKeys.all, 'tracks'] as const,
 };
+
+export const TRACKS_PAGE_SIZE = 60;
+
+/** What the library list is showing. `album`: undefined = any, '' = no album, else that album. */
+export interface TrackFilter {
+    album?: string;
+    order?: 'asc' | 'desc';
+    q: string;
+    sort: TrackSort;
+}
+
+const trackQuery = (filter: TrackFilter) => ({
+    album: filter.album,
+    order: filter.order,
+    q: filter.q,
+    sort: filter.sort,
+});
 
 const ACTIVE_POLL_MS = 3000;
 
 export const luboxQueries = {
+    /** GET /albums: the filter options, with the number of tracks in each (and in none). */
+    albums: () =>
+        queryOptions({
+            queryFn: ({ signal }) => luboxFetch<AlbumsResponse>('/albums', { signal }),
+            queryKey: luboxKeys.albums(),
+            retry: false,
+        }),
+
     /**
      * GET /jobs. Polls every 3 s while anything is waiting or running, and stops when the queue is
      * idle (a download or retry refetches it).
@@ -67,3 +111,62 @@ export const useJobAction = () => {
         onSettled: () => queryClient.invalidateQueries({ queryKey: luboxKeys.jobs() }),
     });
 };
+
+export const luboxLibraryQueries = {
+    /** GET /batch/last: the one batch that can be undone (global, one level), or none. */
+    lastBatch: () =>
+        queryOptions({
+            queryFn: async ({ signal }) =>
+                (await luboxFetch<{ last: LastBatch | null }>('/batch/last', { signal })).last,
+            queryKey: luboxKeys.lastBatch(),
+            retry: false,
+        }),
+
+    /** GET /tracks, 60 at a time. */
+    tracks: (filter: TrackFilter) =>
+        infiniteQueryOptions<
+            TracksResponse,
+            Error,
+            InfiniteData<TracksResponse, number>,
+            ReturnType<typeof luboxKeys.tracks>,
+            number
+        >({
+            getNextPageParam: (last, pages) => {
+                const loaded = pages.reduce((n, page) => n + page.items.length, 0);
+                return loaded < last.total ? loaded : undefined;
+            },
+            initialPageParam: 0,
+            queryFn: ({ pageParam, signal }) =>
+                luboxFetch<TracksResponse>('/tracks', {
+                    query: { ...trackQuery(filter), limit: TRACKS_PAGE_SIZE, offset: pageParam },
+                    signal,
+                }),
+            queryKey: luboxKeys.tracks(filter),
+            retry: false,
+        }),
+};
+
+/** GET /track-ids: every id matching the filter (capped by lubox at 5000), for "select all N matching". */
+export const fetchMatchingTrackIds = (filter: TrackFilter) =>
+    luboxFetch<TrackIdsResponse>('/track-ids', { query: trackQuery(filter) });
+
+// --- batch actions. Plans change nothing; apply, trash and undo write, in chunks driven by the page. ---
+
+export const planBatch = (ids: string[], action: BatchAction) =>
+    luboxFetch<BatchPlan>('/batch/plan', { body: { action, ids }, method: 'POST' });
+
+export const applyBatch = (
+    items: { changes: Record<string, string>; video_id: string }[],
+    batch: string,
+    label: string,
+) =>
+    luboxFetch<BatchApplyResult>('/batch/apply', { body: { batch, items, label }, method: 'POST' });
+
+export const trashBatch = (ids: string[], batch: string, label: string) =>
+    luboxFetch<BatchApplyResult>('/batch/delete', { body: { batch, ids, label }, method: 'POST' });
+
+export const undoBatch = (limit: number) =>
+    luboxFetch<BatchUndoResult>('/batch/undo', { body: { limit }, method: 'POST' });
+
+export const fetchLastBatch = async (): Promise<LastBatch | null> =>
+    (await luboxFetch<{ last: LastBatch | null }>('/batch/last')).last;

@@ -13,6 +13,12 @@ import { ScrollArea } from '/@/shared/components/scroll-area/scroll-area';
 interface LuboxPageProps {
     /** Content shown to users who may use the page. */
     children: ReactNode;
+    /** Number shown as a badge next to the title (undefined while loading). */
+    count?: number;
+    /** A bar under the header that stays put while the content scrolls (sort, filters). */
+    filterBar?: ReactNode;
+    /** Pinned below the content, for example the selection bar. */
+    footer?: ReactNode;
     /** Right side of the header (search, buttons). */
     headerActions?: ReactNode;
     title: string;
@@ -22,7 +28,14 @@ interface LuboxPageProps {
  * Shared chrome for every lubox page: Feishin's animated page, error boundary and sticky header,
  * plus the admin gate. Pages never repeat this.
  */
-export const LuboxPage = ({ children, headerActions, title }: LuboxPageProps) => {
+export const LuboxPage = ({
+    children,
+    count,
+    filterBar,
+    footer,
+    headerActions,
+    title,
+}: LuboxPageProps) => {
     const { t } = useTranslation();
     const { canManage } = useLuboxAccess();
 
@@ -32,11 +45,18 @@ export const LuboxPage = ({ children, headerActions, title }: LuboxPageProps) =>
                 <PageHeader>
                     <LibraryHeaderBar ignoreMaxWidth>
                         <LibraryHeaderBar.Title>{title}</LibraryHeaderBar.Title>
+                        {canManage && count !== undefined && (
+                            <LibraryHeaderBar.Badge>{count}</LibraryHeaderBar.Badge>
+                        )}
                     </LibraryHeaderBar>
                     {canManage && headerActions}
                 </PageHeader>
+                {canManage && filterBar}
                 {canManage ? (
-                    <ScrollArea>{children}</ScrollArea>
+                    <>
+                        <ScrollArea>{children}</ScrollArea>
+                        {footer}
+                    </>
                 ) : (
                     <LuboxStateMessage
                         description={t('lubox.access.adminOnlyDescription')}
