@@ -86,6 +86,8 @@ const FavoritesRoute = lazy(() => import('/@/renderer/features/favorites/routes/
 
 const SettingsRoute = lazy(() => import('/@/renderer/features/settings/routes/settings-route'));
 
+const LuboxRoute = lazy(() => import('/@/renderer/features/lubox/routes/lubox-route'));
+
 const LazyLyricsSettingsContextModal = lazy(() =>
     import('/@/renderer/features/lyrics/components/lyrics-settings-modal').then((module) => ({
         default: module.LyricsSettingsContextModal,
@@ -337,6 +339,7 @@ export const AppRouter = () => {
                                                 />
                                             </Route>
                                         </Route>
+                                        <Route element={<LuboxRoute />} path="/lubox/*" />
                                         <Route element={<InvalidRoute />} path="*" />
                                     </Route>
                                 </Route>

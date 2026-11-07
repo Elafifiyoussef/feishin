@@ -7,6 +7,7 @@ import styles from './sidebar.module.css';
 
 import { useItemImageUrl } from '/@/renderer/components/item-image/item-image';
 import { ContextMenuController } from '/@/renderer/features/context-menu/context-menu-controller';
+import { LuboxSidebarSection } from '/@/renderer/features/lubox/components/lubox-sidebar-section';
 import {
     useIsRadioActive,
     useRadioPlayer,
@@ -136,7 +137,7 @@ export const Sidebar = () => {
                         item: styles.accordionItem,
                         root: styles.accordionRoot,
                     }}
-                    defaultValue={['library', 'collections', 'playlists']}
+                    defaultValue={['library', 'lubox', 'collections', 'playlists']}
                     multiple
                 >
                     <Accordion.Item value="library">
@@ -158,6 +159,7 @@ export const Sidebar = () => {
                             })}
                         </Accordion.Panel>
                     </Accordion.Item>
+                    <LuboxSidebarSection />
                     <SidebarCollectionList />
                     {sidebarPlaylistList && <SidebarPlaylistSection />}
                 </Accordion>
