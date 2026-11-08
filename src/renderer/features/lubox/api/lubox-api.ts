@@ -70,6 +70,29 @@ export const luboxTrashQueries = {
         }),
 };
 
+// --- covers (ADR-0009): a track's cover is written to its main file and every copy ---
+
+const trackPath = (videoId: string) => `/tracks/${encodeURIComponent(videoId)}`;
+
+/** PUT /tracks/{id}/cover: the image itself is the body (JPEG, PNG or WebP, at most 10 MB). */
+export const uploadTrackCover = (videoId: string, image: Blob) =>
+    luboxFetch<{ ok: boolean }>(`${trackPath(videoId)}/cover`, { method: 'PUT', upload: image });
+
+/** Back to the original YouTube cover lubox kept. */
+export const resetTrackCover = (videoId: string) =>
+    luboxFetch<{ ok: boolean }>(`${trackPath(videoId)}/cover/reset`, { method: 'POST' });
+
+/** PUT /albums/cover: one image for every file tagged with that album. */
+export const uploadAlbumCover = (album: string, image: Blob) =>
+    luboxFetch<{ files: number }>('/albums/cover', {
+        method: 'PUT',
+        query: { album },
+        upload: image,
+    });
+
+export const resetAlbumCover = (album: string) =>
+    luboxFetch<{ files: number }>('/albums/cover/reset', { body: { album }, method: 'POST' });
+
 export const fetchTrackDetail = (videoId: string) =>
     luboxFetch<LuboxTrackDetail>(`/tracks/${encodeURIComponent(videoId)}`);
 

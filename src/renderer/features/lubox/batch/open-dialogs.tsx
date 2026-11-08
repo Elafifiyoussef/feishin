@@ -2,6 +2,7 @@ import { closeModal, openModal, updateModal } from '@mantine/modals';
 import i18n from 'i18next';
 
 import { LastBatch } from '/@/renderer/features/lubox/api/types';
+import { AlbumDialogBody } from '/@/renderer/features/lubox/batch/album-dialog';
 import { BatchDialogBody } from '/@/renderer/features/lubox/batch/batch-dialog';
 import { EditTagsDialogBody } from '/@/renderer/features/lubox/batch/edit-tags-dialog';
 import { UndoDialogBody } from '/@/renderer/features/lubox/batch/undo-dialog';
@@ -13,6 +14,31 @@ let counter = 0;
 /** While a batch runs the dialog must not be closable (Escape, the X, a click outside). */
 const lockWhileBusy = (modalId: string) => (busy: boolean) =>
     updateModal({ closeOnEscape: !busy, modalId, withCloseButton: !busy });
+
+/** "Edit album" for the selected tracks: set a name, use the track titles, a playlist, or clear it. */
+export function openAlbumDialog(options: { onDone?: () => void; selectedIds: string[] }) {
+    const { onDone, selectedIds } = options;
+    const modalId = `lubox-album-${(counter += 1)}`;
+    const count = selectedIds.length;
+
+    openModal({
+        children: (
+            <AlbumDialogBody
+                onBusyChange={lockWhileBusy(modalId)}
+                onClose={() => closeModal(modalId)}
+                onDone={onDone}
+                selectedIds={selectedIds}
+            />
+        ),
+        closeOnClickOutside: false,
+        modalId,
+        size: 'lg',
+        title:
+            count === 1
+                ? i18n.t('lubox.batch.dialog.albumTitleOne')
+                : i18n.t('lubox.batch.dialog.albumTitle', { count }),
+    });
+}
 
 /**
  * Opens a batch action (preview, apply, undo) in Feishin's modal manager, so it works from anywhere,

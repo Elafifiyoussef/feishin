@@ -1,0 +1,91 @@
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-md);
+}
+
+.note {
+    margin: 0;
+    font-size: var(--theme-font-size-sm);
+    color: var(--theme-colors-foreground-muted);
+}
+
+.crop {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-sm);
+    align-items: center;
+}
+
+/* the square is the crop: what shows inside it is exactly what gets saved */
+.crop-box {
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    background: var(--theme-colors-surface);
+    border: 1px solid var(--theme-colors-border);
+    border-radius: var(--theme-radius-md);
+
+    &[data-ready='true'] {
+        cursor: grab;
+    }
+
+    &[data-ready='true']:active {
+        cursor: grabbing;
+    }
+
+    img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        max-width: none;
+        pointer-events: none;
+    }
+}
+
+.crop-empty {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-sm);
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: var(--theme-spacing-md);
+    font-size: var(--theme-font-size-sm);
+    color: var(--theme-colors-foreground-muted);
+    text-align: center;
+}
+
+.zoom {
+    display: flex;
+    gap: var(--theme-spacing-sm);
+    align-items: center;
+    width: 18rem;
+    max-width: 100%;
+}
+
+.problem {
+    margin: 0;
+    font-size: var(--theme-font-size-sm);
+    color: var(--theme-colors-state-error);
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--theme-spacing-sm);
+    align-items: center;
+    justify-content: space-between;
+}
+
+.actions-group {
+    display: flex;
+    gap: var(--theme-spacing-sm);
+}
+
+/* Cancel and Save stay on the right, even when the row wraps */
+.actions-group:last-child {
+    margin-left: auto;
+}

@@ -33,9 +33,11 @@ export const getLuboxErrorMessage = (error: unknown): string =>
 
 interface LuboxRequestOptions {
     body?: unknown;
-    method?: 'DELETE' | 'GET' | 'PATCH' | 'POST';
+    method?: 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
     query?: Record<string, boolean | null | number | string | undefined>;
     signal?: AbortSignal;
+    /** Sent as the raw request body with its own type (an image), instead of JSON `body`. */
+    upload?: Blob;
 }
 
 const buildUrl = (path: string, query?: LuboxRequestOptions['query']) => {
@@ -54,15 +56,19 @@ const getAuthHeader = (): Record<string, string> => {
 };
 
 export async function luboxFetch<T>(path: string, options: LuboxRequestOptions = {}): Promise<T> {
-    const { body, method = 'GET', query, signal } = options;
+    const { body, method = 'GET', query, signal, upload } = options;
+
+    let contentType: Record<string, string> = {};
+    if (upload) contentType = { 'Content-Type': upload.type || 'application/octet-stream' };
+    else if (body !== undefined) contentType = { 'Content-Type': 'application/json' };
 
     let response: Response;
     try {
         response = await fetch(buildUrl(path, query), {
-            body: body === undefined ? undefined : JSON.stringify(body),
+            body: upload ?? (body === undefined ? undefined : JSON.stringify(body)),
             headers: {
                 Accept: 'application/json',
-                ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+                ...contentType,
                 ...getAuthHeader(),
             },
             method,

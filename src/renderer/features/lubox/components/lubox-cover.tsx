@@ -3,6 +3,7 @@ import { useState } from 'react';
 import styles from './lubox-cover.module.css';
 
 import { getLuboxApiBase } from '/@/renderer/features/lubox/constants';
+import { useCoverVersion } from '/@/renderer/features/lubox/lib/cover-version';
 import { Icon } from '/@/shared/components/icon/icon';
 
 interface LuboxCoverProps {
@@ -14,7 +15,10 @@ interface LuboxCoverProps {
 
 /** Square cover tile: the 16:9 thumbnail is cropped to fill, a muted note shows when there is none. */
 export const LuboxCover = ({ videoId, wide }: LuboxCoverProps) => {
-    const [failed, setFailed] = useState(false);
+    const version = useCoverVersion(videoId);
+    // remember which version failed, so a changed cover is tried again
+    const [failedVersion, setFailedVersion] = useState<null | string>(null);
+    const failed = failedVersion === version;
 
     return (
         <span aria-hidden="true" className={wide ? `${styles.cover} ${styles.wide}` : styles.cover}>
@@ -25,8 +29,8 @@ export const LuboxCover = ({ videoId, wide }: LuboxCoverProps) => {
                     alt=""
                     decoding="async"
                     loading="lazy"
-                    onError={() => setFailed(true)}
-                    src={`${getLuboxApiBase()}/tracks/${encodeURIComponent(videoId)}/cover`}
+                    onError={() => setFailedVersion(version)}
+                    src={`${getLuboxApiBase()}/tracks/${encodeURIComponent(videoId)}/cover${version ? `?v=${version}` : ''}`}
                 />
             )}
         </span>

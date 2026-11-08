@@ -43,7 +43,10 @@ export const AlbumContextMenu = ({ items, type }: AlbumContextMenuProps) => {
             <ContextMenu.Divider />
             <GoToAction items={items} />
             <ContextMenu.Divider />
-            <LuboxMenuGroup albumIds={ids} />
+            <LuboxMenuGroup
+                albumIds={ids}
+                albumName={items.length === 1 ? items[0].name : undefined}
+            />
             <EditMetadataAction albumIds={ids} />
             <GetInfoAction disabled={items.length === 0} items={items} />
         </ContextMenu.Content>
