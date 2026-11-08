@@ -16,11 +16,6 @@ import {
     RecentDownloads,
 } from '/@/renderer/features/lubox/downloader/activity-panel';
 import { CheckResults } from '/@/renderer/features/lubox/downloader/check-results';
-import {
-    EXAMPLE_CHECK,
-    EXAMPLE_JOBS,
-    SHOW_EXAMPLES,
-} from '/@/renderer/features/lubox/downloader/example-data';
 import { LinkComposer } from '/@/renderer/features/lubox/downloader/link-composer';
 import { PauseBanner } from '/@/renderer/features/lubox/downloader/pause-banner';
 import { CheckedItem, toCheckedItem } from '/@/renderer/features/lubox/downloader/types';
@@ -36,9 +31,7 @@ export const DownloaderPage = () => {
     const { etaText } = useEta();
 
     const [text, setText] = useState('');
-    const [checked, setChecked] = useState<CheckedItem[]>(() =>
-        SHOW_EXAMPLES ? EXAMPLE_CHECK.map(toCheckedItem) : [],
-    );
+    const [checked, setChecked] = useState<CheckedItem[]>([]);
     const [status, setStatus] = useState('');
 
     const checkMutation = useCheckLinks();
@@ -97,13 +90,6 @@ export const DownloaderPage = () => {
 
     const handleDownload = () => {
         if (!selection.length) return;
-        // example rows are not real videos: never send them to lubox, just clear them like a real download
-        if (SHOW_EXAMPLES) {
-            setChecked([]);
-            setText('');
-            setStatus('');
-            return;
-        }
         downloadMutation.mutate(selection, {
             onError: (error) => toast.error({ message: getLuboxErrorMessage(error) }),
             onSuccess: (data) => {
@@ -162,10 +148,10 @@ export const DownloaderPage = () => {
                         selectedCount={selection.length}
                     />
                 </div>
-                <ActivityPanel data={SHOW_EXAMPLES ? EXAMPLE_JOBS : undefined} />
+                <ActivityPanel />
                 {showRecent && (
                     <div className={styles.recentArea}>
-                        <RecentDownloads data={SHOW_EXAMPLES ? EXAMPLE_JOBS : undefined} />
+                        <RecentDownloads />
                     </div>
                 )}
             </div>
