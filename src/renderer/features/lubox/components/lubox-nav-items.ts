@@ -20,13 +20,6 @@ export const luboxNavItems: LuboxNavItem[] = [
     },
     {
         adminOnly: true,
-        icon: 'library',
-        id: 'library',
-        labelKey: 'lubox.nav.library',
-        to: LuboxPath.LIBRARY,
-    },
-    {
-        adminOnly: true,
         icon: 'delete',
         id: 'trash',
         labelKey: 'lubox.nav.trash',

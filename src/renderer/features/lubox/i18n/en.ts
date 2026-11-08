@@ -104,7 +104,7 @@ export const luboxEn = {
             },
             recent: 'Recently downloaded',
             recentEmpty: 'Nothing downloaded yet. Checked links you download show up here.',
-            seeAll: 'See all in library tools',
+            seeAll: 'See all in Tracks',
             states: {
                 canceled: 'canceled',
                 done: 'downloaded',
@@ -235,14 +235,11 @@ export const luboxEn = {
     },
     nav: {
         download: 'Downloader',
-        library: 'Library tools',
         title: 'lubox',
         trash: 'Trash',
     },
     pages: {
         download: { title: 'Downloader' },
-        library: { title: 'Library tools' },
-        track: { title: 'Track' },
         trash: { title: 'Trash' },
     },
     status: {
@@ -280,5 +277,6 @@ export const luboxEn = {
         selected_other: '{{count}} tracks selected',
         selectNone: 'Select tracks to restore them',
         trashed: 'Deleted',
+        undo: 'Undo last change',
     },
 };

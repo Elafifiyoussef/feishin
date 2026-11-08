@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,11 +7,13 @@ import styles from '../library/library.module.css';
 import { getLuboxErrorMessage } from '/@/renderer/features/lubox/api/client';
 import {
     luboxKeys,
+    luboxLibraryQueries,
     luboxTrashQueries,
     restoreFromTrash,
 } from '/@/renderer/features/lubox/api/lubox-api';
 import { TrashItem } from '/@/renderer/features/lubox/api/types';
 import { afterLuboxChange } from '/@/renderer/features/lubox/batch/after-change';
+import { openUndoDialog } from '/@/renderer/features/lubox/batch/open-dialogs';
 import { LuboxCover } from '/@/renderer/features/lubox/components/lubox-cover';
 import { LuboxPage } from '/@/renderer/features/lubox/components/lubox-page';
 import { LuboxStateMessage } from '/@/renderer/features/lubox/components/lubox-state-message';
@@ -96,6 +98,7 @@ export const TrashPage = () => {
     const selection = useLibrarySelection();
     const [restoring, setRestoring] = useState(false);
 
+    const { data: lastBatch } = useQuery(luboxLibraryQueries.lastBatch());
     const query = useInfiniteQuery(luboxTrashQueries.list());
     const items = useMemo(
         () => query.data?.pages.flatMap((page) => page.items) ?? [],
@@ -241,21 +244,49 @@ export const TrashPage = () => {
                 )
             }
             headerActions={
-                (total ?? 0) > 0 && (
-                    <Button
-                        onClick={() =>
-                            openPurgeDialog(
-                                { count: total ?? 0, size: query.data?.pages[0]?.size },
-                                selection.clear,
-                            )
-                        }
-                        // the header is a shrinking flex row: keep the label whole
-                        style={{ flexShrink: 0, marginRight: 'var(--theme-spacing-md)' }}
-                        variant="default"
-                    >
-                        {t('lubox.trash.emptyTrash')}
-                    </Button>
-                )
+                // the header is a shrinking flex row: keep the labels whole
+                <div
+                    style={{
+                        display: 'flex',
+                        flexShrink: 0,
+                        gap: 'var(--theme-spacing-sm)',
+                        marginRight: 'var(--theme-spacing-md)',
+                    }}
+                >
+                    {lastBatch && (
+                        <Button
+                            leftSection={<Icon icon="refresh" />}
+                            onClick={() =>
+                                openUndoDialog({
+                                    last: lastBatch,
+                                    onDone: () =>
+                                        queryClient.invalidateQueries({
+                                            queryKey: luboxKeys.trash(),
+                                        }),
+                                })
+                            }
+                            style={{ flexShrink: 0 }}
+                            title={lastBatch.label || undefined}
+                            variant="default"
+                        >
+                            {t('lubox.trash.undo')}
+                        </Button>
+                    )}
+                    {(total ?? 0) > 0 && (
+                        <Button
+                            onClick={() =>
+                                openPurgeDialog(
+                                    { count: total ?? 0, size: query.data?.pages[0]?.size },
+                                    selection.clear,
+                                )
+                            }
+                            style={{ flexShrink: 0 }}
+                            variant="default"
+                        >
+                            {t('lubox.trash.emptyTrash')}
+                        </Button>
+                    )}
+                </div>
             }
             title={t('lubox.pages.trash.title')}
         >

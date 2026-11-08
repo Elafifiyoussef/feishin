@@ -6,9 +6,7 @@
 /** Router (hash) paths owned by this feature. */
 export const LuboxPath = {
     DOWNLOAD: '/lubox/download',
-    LIBRARY: '/lubox/library',
     ROOT: '/lubox',
-    TRACK: '/lubox/track',
     TRASH: '/lubox/trash',
 } as const;
 

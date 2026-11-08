@@ -1,6 +1,8 @@
 # Plan: Trash page, then retire the Library page
 
-Status: proposal, nothing built. Depends on three lubox endpoints (requested from the lubox session, shapes not yet confirmed).
+Status: done. The Trash page (list, restore, permanent delete, empty trash, undo last change) and the "Edit tags" dialog are built,
+and the Library page has been removed. lubox's `/trash`, `/trash/restore` and `/trash/purge` endpoints are live. The text below is the
+original plan, kept for the reasoning.
 
 ## 1. Goal
 

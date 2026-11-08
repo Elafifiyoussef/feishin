@@ -9,9 +9,9 @@ import { getLuboxErrorMessage } from '/@/renderer/features/lubox/api/client';
 import { luboxQueries, useJobAction } from '/@/renderer/features/lubox/api/lubox-api';
 import { Job, JobState } from '/@/renderer/features/lubox/api/types';
 import { LuboxCover } from '/@/renderer/features/lubox/components/lubox-cover';
-import { LuboxPath } from '/@/renderer/features/lubox/constants';
 import { useEta } from '/@/renderer/features/lubox/downloader/use-eta';
 import { splitActivity, summarize } from '/@/renderer/features/lubox/lib/queue';
+import { AppRoute } from '/@/renderer/router/routes';
 import { Button } from '/@/shared/components/button/button';
 import { AppIconSelection, Icon, IconColor } from '/@/shared/components/icon/icon';
 import { Spinner } from '/@/shared/components/spinner/spinner';
@@ -253,7 +253,7 @@ export const ActivityPanel = () => {
                         ))}
                     </ul>
                 )}
-                <Link className={styles.seeAll} to={LuboxPath.LIBRARY}>
+                <Link className={styles.seeAll} to={AppRoute.LIBRARY_SONGS}>
                     {t('lubox.downloader.activity.seeAll')}
                 </Link>
             </ListSection>
