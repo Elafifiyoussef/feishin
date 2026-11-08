@@ -11,7 +11,10 @@ import {
     useCheckLinks,
     useDownload,
 } from '/@/renderer/features/lubox/api/lubox-api';
-import { ActivityPanel } from '/@/renderer/features/lubox/downloader/activity-panel';
+import {
+    ActivityPanel,
+    RecentDownloads,
+} from '/@/renderer/features/lubox/downloader/activity-panel';
 import { CheckResults } from '/@/renderer/features/lubox/downloader/check-results';
 import {
     EXAMPLE_CHECK,
@@ -94,8 +97,13 @@ export const DownloaderPage = () => {
 
     const handleDownload = () => {
         if (!selection.length) return;
-        // example rows are not real videos: never send them to lubox
-        if (SHOW_EXAMPLES) return;
+        // example rows are not real videos: never send them to lubox, just clear them like a real download
+        if (SHOW_EXAMPLES) {
+            setChecked([]);
+            setText('');
+            setStatus('');
+            return;
+        }
         downloadMutation.mutate(selection, {
             onError: (error) => toast.error({ message: getLuboxErrorMessage(error) }),
             onSuccess: (data) => {
@@ -127,10 +135,14 @@ export const DownloaderPage = () => {
         });
     };
 
+    // recent downloads take the results' place once they clear (right after Download)
+    const showRecent = checked.length === 0;
+
     return (
         <div className={styles.page}>
             <PauseBanner />
-            <div className={styles.layout}>
+            {/* stacked (narrow): link box, results or activity, then recent downloads; wide: activity on the right */}
+            <div className={styles.layout} data-recent={showRecent}>
                 <div className={styles.main}>
                     <LinkComposer
                         isChecking={checkMutation.isPending}
@@ -151,6 +163,11 @@ export const DownloaderPage = () => {
                     />
                 </div>
                 <ActivityPanel data={SHOW_EXAMPLES ? EXAMPLE_JOBS : undefined} />
+                {showRecent && (
+                    <div className={styles.recentArea}>
+                        <RecentDownloads data={SHOW_EXAMPLES ? EXAMPLE_JOBS : undefined} />
+                    </div>
+                )}
             </div>
         </div>
     );

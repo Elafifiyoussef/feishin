@@ -167,35 +167,93 @@ const RecentRow = memo(({ job, locale }: { job: Job; locale: string }) => {
     );
 });
 
+/** One count in the summary: a colored state icon and the number, with the full words on hover. */
+const SummaryCount = ({
+    count,
+    label,
+    state,
+}: {
+    count: number;
+    label: string;
+    state: JobState;
+}) => {
+    const mark = STATE_ICON[state];
+    return (
+        <span aria-label={label} className={styles.summaryCount} role="img" title={label}>
+            <Icon color={mark.color} icon={mark.icon} />
+            {count}
+        </span>
+    );
+};
+
+/** Downloading, waiting and failed as colored icons on the left; the time left, short, on the right. */
 const Summary = ({ data }: { data?: JobsResponse }) => {
     const { t } = useTranslation();
-    const { etaText } = useEta();
+    const { etaShort, etaText } = useEta();
 
     if (!data) return null;
 
     const { failed, running, waiting } = summarize(data.counts);
-    const eta = running + waiting > 0 && !data.pause.paused ? etaText(running + waiting) : '';
+    const busy = running + waiting > 0 && !data.pause.paused;
+    const eta = busy ? etaShort(running + waiting) : '';
 
-    const parts = [
-        running > 0 && t('lubox.downloader.activity.summary.running', { count: running }),
-        waiting > 0 && t('lubox.downloader.activity.summary.waiting', { count: waiting }),
-        eta && t('lubox.downloader.activity.summary.timeLeft', { eta }),
-        failed > 0 && t('lubox.downloader.activity.summary.failed', { count: failed }),
-    ].filter(Boolean) as string[];
+    if (running + waiting + failed === 0) {
+        return (
+            <div aria-live="polite" className={styles.summary}>
+                {t('lubox.downloader.activity.idle')}
+            </div>
+        );
+    }
 
     return (
-        <div
-            aria-live="polite"
-            className={styles.summary}
-            title={eta ? t('lubox.downloader.activity.summary.timeLeftHint') : undefined}
-        >
-            {parts.length > 0 ? parts.join(' · ') : t('lubox.downloader.activity.idle')}
+        <div aria-live="polite" className={styles.summary}>
+            <div className={styles.summaryCounts}>
+                {running > 0 && (
+                    <SummaryCount
+                        count={running}
+                        label={t('lubox.downloader.activity.summary.running', { count: running })}
+                        state="running"
+                    />
+                )}
+                {waiting > 0 && (
+                    <SummaryCount
+                        count={waiting}
+                        label={t('lubox.downloader.activity.summary.waiting', { count: waiting })}
+                        state="queued"
+                    />
+                )}
+                {failed > 0 && (
+                    <SummaryCount
+                        count={failed}
+                        label={t('lubox.downloader.activity.summary.failed', { count: failed })}
+                        state="failed"
+                    />
+                )}
+            </div>
+            {eta && (
+                <span
+                    className={styles.summaryEta}
+                    title={t('lubox.downloader.activity.summary.timeLeftHint', {
+                        eta: etaText(running + waiting),
+                    })}
+                >
+                    {eta}
+                </span>
+            )}
         </div>
     );
 };
 
-const ListSection = ({ children, title }: { children: React.ReactNode; title: string }) => (
-    <section>
+const ListSection = ({
+    children,
+    kind,
+    title,
+}: {
+    children: React.ReactNode;
+    kind?: 'failed';
+    title: string;
+}) => (
+    <section className={styles.activitySection} data-kind={kind}>
         <h3 className={styles.groupHead}>{title}</h3>
         {children}
     </section>
@@ -206,8 +264,8 @@ const ListSection = ({ children, title }: { children: React.ReactNode; title: st
  * few finished downloads. The full history is in the library tools.
  */
 export const ActivityPanel = ({ data: preset }: { data?: JobsResponse } = {}) => {
-    const { i18n, t } = useTranslation();
-    // `data` is only passed by the states preview page; everywhere else the panel loads and polls /jobs
+    const { t } = useTranslation();
+    // `data` is only passed for the example rows; everywhere else the panel loads and polls /jobs
     const query = useQuery({ ...luboxQueries.jobs(), enabled: !preset });
     const data = preset ?? query.data;
     const isLoading = !preset && query.isLoading;
@@ -219,16 +277,17 @@ export const ActivityPanel = ({ data: preset }: { data?: JobsResponse } = {}) =>
 
     return (
         <aside className={styles.activity}>
-            <div className={styles.sectionHead}>
+            {/* title and the one-line summary under it, as one compact header */}
+            <div className={styles.activityHead}>
                 <TextTitle fw={600} order={4}>
                     {t('lubox.downloader.activity.title')}
                 </TextTitle>
+                <Summary data={data} />
             </div>
-            <Summary data={data} />
 
             {activity.failed.length > 0 && (
-                <ListSection title={t('lubox.downloader.activity.failed')}>
-                    <ul className={styles.list}>
+                <ListSection kind="failed" title={t('lubox.downloader.activity.failed')}>
+                    <ul className={`${styles.list} ${styles.scrollY}`}>
                         {activity.failed.map((job) => (
                             <ActiveRow job={job} key={job.id} />
                         ))}
@@ -253,21 +312,37 @@ export const ActivityPanel = ({ data: preset }: { data?: JobsResponse } = {}) =>
                     </div>
                 </ListSection>
             )}
-
-            <ListSection title={t('lubox.downloader.activity.recent')}>
-                {activity.recent.length === 0 ? (
-                    <p className={styles.empty}>{t('lubox.downloader.activity.recentEmpty')}</p>
-                ) : (
-                    <ul className={styles.list}>
-                        {activity.recent.map((job) => (
-                            <RecentRow job={job} key={job.id} locale={i18n.language} />
-                        ))}
-                    </ul>
-                )}
-                <Link className={styles.seeAll} to={AppRoute.LIBRARY_SONGS}>
-                    {t('lubox.downloader.activity.seeAll')}
-                </Link>
-            </ListSection>
         </aside>
+    );
+};
+
+/**
+ * The newest few finished downloads. Shown in the left column under the link box whenever there are no
+ * check results (after Download the results clear, so this takes their place).
+ */
+export const RecentDownloads = ({ data: preset }: { data?: JobsResponse } = {}) => {
+    const { i18n, t } = useTranslation();
+    // `data` is only passed for the example rows; otherwise this reads the same polled /jobs query
+    const query = useQuery({ ...luboxQueries.jobs(), enabled: !preset });
+    const data = preset ?? query.data;
+    const recent = useMemo(() => (data ? splitActivity(data.jobs).recent : null), [data]);
+
+    if (!recent) return null;
+
+    return (
+        <ListSection title={t('lubox.downloader.activity.recent')}>
+            {recent.length === 0 ? (
+                <p className={styles.empty}>{t('lubox.downloader.activity.recentEmpty')}</p>
+            ) : (
+                <ul className={`${styles.list} ${styles.scrollY}`}>
+                    {recent.map((job) => (
+                        <RecentRow job={job} key={job.id} locale={i18n.language} />
+                    ))}
+                </ul>
+            )}
+            <Link className={styles.seeAll} to={AppRoute.LIBRARY_SONGS}>
+                {t('lubox.downloader.activity.seeAll')}
+            </Link>
+        </ListSection>
     );
 };

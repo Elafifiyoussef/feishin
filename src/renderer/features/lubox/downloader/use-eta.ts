@@ -32,5 +32,22 @@ export const useEta = () => {
         [format, secondsPerTrack],
     );
 
-    return { etaText };
+    /** The same estimate, short: "<1m", "~12m", "~1h 5m". */
+    const etaShort = useCallback(
+        (tracks: number): string => {
+            const eta = estimateEta(tracks, secondsPerTrack);
+            if (!eta) return '';
+            if (eta.unit === 'under-a-minute') return t('lubox.downloader.eta.short.underAMinute');
+            if (eta.unit === 'minutes') {
+                return t('lubox.downloader.eta.short.minutes', { minutes: eta.minutes });
+            }
+            return t('lubox.downloader.eta.short.hours', {
+                hours: eta.hours,
+                minutes: eta.minutes,
+            });
+        },
+        [secondsPerTrack, t],
+    );
+
+    return { etaShort, etaText };
 };

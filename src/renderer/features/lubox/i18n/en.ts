@@ -119,7 +119,8 @@ export const luboxEn = {
                 failed: '{{count}} failed',
                 running: '{{count}} downloading',
                 timeLeft: '{{eta}} left',
-                timeLeftHint: 'Estimated from how fast recent downloads finished',
+                timeLeftHint:
+                    'Time left, estimated from how fast recent downloads finished: {{eta}}',
                 waiting: '{{count}} waiting',
             },
             title: 'Activity',
@@ -142,6 +143,11 @@ export const luboxEn = {
         eta: {
             hours: 'about {{hours}} h {{minutes}} min',
             minutes: 'about {{minutes}} min',
+            short: {
+                hours: '~{{hours}}h {{minutes}}m',
+                minutes: '~{{minutes}}m',
+                underAMinute: '<1m',
+            },
             underAMinute: 'under a minute',
         },
         results: {

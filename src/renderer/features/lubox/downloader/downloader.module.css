@@ -1,40 +1,35 @@
+/* The page fills the view and never scrolls as a whole: long lists scroll inside their own box */
 .page {
     display: flex;
     flex-direction: column;
     gap: var(--theme-spacing-xl);
     width: 100%;
     max-width: 75rem;
+    height: 100%;
     padding: var(--theme-spacing-md);
     margin: 0 auto;
     container-type: inline-size;
 }
 
-/* One column on phones and narrow panes; composer on the left and live activity on the right when wide */
+/* One column on phones and narrow panes (that column scrolls); composer left and activity right when wide */
 .layout {
     display: grid;
+    flex: 1 1 auto;
+    grid-template-areas:
+        'main'
+        'activity'
+        'recent';
     grid-template-columns: minmax(0, 1fr);
     gap: var(--theme-spacing-xl);
     align-items: start;
-}
-
-@container (min-width: 56rem) {
-    .layout {
-        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    }
-
-    .activity {
-        position: sticky;
-        top: var(--theme-spacing-md);
-        padding-top: 0;
-        padding-left: var(--theme-spacing-xl);
-        border-top: none;
-        border-left: 1px solid var(--theme-colors-border);
-    }
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .main {
     display: flex;
     flex-direction: column;
+    grid-area: main;
     gap: var(--theme-spacing-xl);
     min-width: 0;
 }
@@ -43,15 +38,128 @@
 .activity {
     display: flex;
     flex-direction: column;
-    gap: var(--theme-spacing-lg);
+    gap: var(--theme-spacing-md);
     min-width: 0;
     padding-top: var(--theme-spacing-xl);
     border-top: 1px solid var(--theme-colors-border);
 }
 
+.layout > .activity {
+    grid-area: activity;
+}
+
+.recent-area {
+    display: flex;
+    flex-direction: column;
+    grid-area: recent;
+    min-height: 0;
+}
+
+.results {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.activity-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+@container (min-width: 56rem) {
+    .layout {
+        grid-template-areas: 'main activity';
+        grid-template-rows: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        align-items: stretch;
+        overflow: hidden;
+    }
+
+    /* no results: the link box on top, recent downloads filling the rest of the left column */
+    .layout[data-recent='true'] {
+        grid-template-areas:
+            'main activity'
+            'recent activity';
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .main,
+    .layout > .activity {
+        min-height: 0;
+    }
+
+    .layout > .activity {
+        padding-top: 0;
+        padding-left: var(--theme-spacing-xl);
+        border-top: none;
+        border-left: 1px solid var(--theme-colors-border);
+    }
+
+    /* the check results take the room left under the link box and scroll inside */
+    .main > .results {
+        flex: 0 1 auto;
+    }
+
+    .results > .scroll-y {
+        flex: 0 1 auto;
+        min-height: 0;
+    }
+
+    /*
+     * Failed, In progress and Recently downloaded share the column: each keeps its natural height and,
+     * when they do not all fit, they shrink together (the longest the most) and scroll inside.
+     */
+    .activity-section {
+        flex: 0 1 auto;
+        min-height: 6rem;
+    }
+
+    /* failed downloads need you, so they give up their room last (In progress shrinks and scrolls first) */
+    .activity-section[data-kind='failed'] {
+        flex-shrink: 0.1;
+    }
+
+    .activity-section > .scroll-y,
+    .activity-section > .scroll-box {
+        flex: 0 1 auto;
+        min-height: 0;
+        max-height: none;
+    }
+}
+
+.activity-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-sm);
+}
+
 .summary {
-    font-size: var(--theme-font-size-md);
+    display: flex;
+    gap: var(--theme-spacing-md);
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--theme-font-size-sm);
     color: var(--theme-colors-foreground-muted);
+}
+
+.summary-counts {
+    display: flex;
+    gap: var(--theme-spacing-md);
+    align-items: center;
+}
+
+.summary-count {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--theme-colors-foreground);
+}
+
+.summary-eta {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
 }
 
 .list-bare {
@@ -160,9 +268,24 @@
     display: flex;
     flex-shrink: 0;
     align-items: center;
+    align-self: center;
     justify-content: center;
     min-width: 1.25rem;
     min-height: 1.5rem;
+}
+
+/* A playlist row stacks its header (checkbox, title, button) above the opened track list */
+.playlist-row {
+    flex-direction: column;
+    gap: 0;
+    align-items: stretch;
+}
+
+.row-head {
+    display: flex;
+    gap: var(--theme-spacing-md);
+    align-items: center;
+    min-width: 0;
 }
 
 .body {
@@ -218,11 +341,14 @@ a.title-text {
 
 .actions {
     flex-shrink: 0;
+    align-self: center;
 }
 
 .entries {
-    padding: 0;
-    margin: var(--theme-spacing-sm) 0 0;
+    padding: var(--theme-spacing-sm) 0 0;
+
+    /* line the tracks up under the playlist title: lead column plus the gap */
+    margin: var(--theme-spacing-sm) 0 0 calc(1.25rem + var(--theme-spacing-md));
     list-style: none;
     border-top: 1px solid var(--theme-colors-border);
 }
@@ -230,7 +356,7 @@ a.title-text {
 .entry {
     display: flex;
     gap: var(--theme-spacing-md);
-    align-items: flex-start;
+    align-items: center;
     padding: var(--theme-spacing-xs) 0;
 
     &[data-skipped='true'] {
@@ -258,4 +384,9 @@ a.title-text {
     text-align: center;
     border: 1px dashed var(--theme-colors-border);
     border-radius: var(--theme-radius-md);
+}
+
+/* last, so it wins over the `overflow: hidden` of .list */
+.scroll-y {
+    overflow-y: auto;
 }

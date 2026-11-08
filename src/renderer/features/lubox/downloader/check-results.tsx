@@ -47,8 +47,10 @@ const CheckResultRow = ({ item, onChange, onWholePlaylist }: CheckResultRowProps
                     <Icon color={mark.color} icon={mark.icon} />
                 </span>
                 <div className={styles.body}>
-                    <div className={styles.titleText} title={item.raw}>
-                        {item.raw}
+                    <div className={styles.title}>
+                        <span className={styles.titleText} title={item.raw}>
+                            {item.raw}
+                        </span>
                     </div>
                     {item.error && <div className={styles.hint}>{item.error}</div>}
                 </div>
@@ -74,6 +76,7 @@ const CheckResultRow = ({ item, onChange, onWholePlaylist }: CheckResultRowProps
                         onChange={(event) =>
                             onChange({ ...item, selected: event.currentTarget.checked })
                         }
+                        size="xs"
                     />
                 </span>
                 <div className={styles.body}>
@@ -82,20 +85,22 @@ const CheckResultRow = ({ item, onChange, onWholePlaylist }: CheckResultRowProps
                             {item.title}
                         </span>
                         {item.in_library && (
-                            <Badge>{t('lubox.downloader.results.inLibrary')}</Badge>
+                            <Badge size="xs">{t('lubox.downloader.results.inLibrary')}</Badge>
                         )}
                     </div>
                     <Meta parts={[item.uploader, formatDuration(item.duration)]} />
-                    {item.playlist_url && (
+                </div>
+                {item.playlist_url && (
+                    <div className={styles.actions}>
                         <Button
                             onClick={() => onWholePlaylist(item)}
-                            size="compact-xs"
-                            variant="subtle"
+                            size="compact-sm"
+                            variant="default"
                         >
                             {t('lubox.downloader.results.wholePlaylist')}
                         </Button>
-                    )}
-                </div>
+                    </div>
+                )}
             </li>
         );
     }
@@ -104,77 +109,82 @@ const CheckResultRow = ({ item, onChange, onWholePlaylist }: CheckResultRowProps
     const chosen = entries.filter((e) => e.selected && !e.skip).length;
 
     return (
-        <li className={styles.row}>
-            <span className={styles.rowLead}>
-                <Checkbox
-                    aria-label={item.title || item.playlist_id || item.raw}
-                    checked={item.selected}
-                    onChange={(event) =>
-                        onChange({ ...item, selected: event.currentTarget.checked })
-                    }
-                />
-            </span>
-            <div className={styles.body}>
-                <div className={styles.title}>
-                    <span className={styles.titleText} title={item.title}>
-                        {item.title || item.playlist_id}
-                    </span>
+        <li className={`${styles.row} ${styles.playlistRow}`}>
+            {/* the header keeps its checkbox and button centered on the title, open or not */}
+            <div className={styles.rowHead}>
+                <span className={styles.rowLead}>
+                    <Checkbox
+                        aria-label={item.title || item.playlist_id || item.raw}
+                        checked={item.selected}
+                        onChange={(event) =>
+                            onChange({ ...item, selected: event.currentTarget.checked })
+                        }
+                        size="xs"
+                    />
+                </span>
+                <div className={styles.body}>
+                    <div className={styles.title}>
+                        <span className={styles.titleText} title={item.title}>
+                            {item.title || item.playlist_id}
+                        </span>
+                    </div>
+                    <Meta
+                        parts={[
+                            t('lubox.downloader.results.playlist'),
+                            item.uploader,
+                            chosen === count
+                                ? t('lubox.downloader.results.videos', { count })
+                                : t('lubox.downloader.results.videosOf', { chosen, count }),
+                        ]}
+                    />
                 </div>
-                <Meta
-                    parts={[
-                        t('lubox.downloader.results.playlist'),
-                        item.uploader,
-                        chosen === count
-                            ? t('lubox.downloader.results.videos', { count })
-                            : t('lubox.downloader.results.videosOf', { chosen, count }),
-                    ]}
-                />
-                <Button
-                    aria-expanded={item.open}
-                    onClick={() => onChange({ ...item, open: !item.open })}
-                    size="compact-xs"
-                    variant="subtle"
-                >
-                    {item.open
-                        ? t('lubox.downloader.results.hideVideos')
-                        : t('lubox.downloader.results.chooseVideos')}
-                </Button>
-                {item.open && (
-                    <ol className={styles.entries}>
-                        {entries.map((entry) => (
-                            <li
-                                className={styles.entry}
-                                data-skipped={Boolean(entry.skip)}
-                                key={`${entry.position}-${entry.id}`}
-                            >
-                                <Checkbox
-                                    aria-label={entry.title || entry.id || ''}
-                                    checked={entry.selected && !entry.skip}
-                                    disabled={Boolean(entry.skip)}
-                                    onChange={(event) =>
-                                        setEntry(entry, event.currentTarget.checked)
-                                    }
-                                />
-                                <span className={styles.entryPosition}>{entry.position}</span>
-                                <div className={styles.body}>
-                                    <div className={styles.title}>
-                                        <span className={styles.titleText} title={entry.title}>
-                                            {entry.title}
-                                        </span>
-                                        {entry.skip && <Badge>{entry.skip}</Badge>}
-                                        {entry.in_library && (
-                                            <Badge>{t('lubox.downloader.results.inLibrary')}</Badge>
-                                        )}
-                                    </div>
-                                    <Meta
-                                        parts={[entry.uploader, formatDuration(entry.duration)]}
-                                    />
-                                </div>
-                            </li>
-                        ))}
-                    </ol>
-                )}
+                <div className={styles.actions}>
+                    <Button
+                        aria-expanded={item.open}
+                        onClick={() => onChange({ ...item, open: !item.open })}
+                        size="compact-sm"
+                        variant="default"
+                    >
+                        {item.open
+                            ? t('lubox.downloader.results.hideVideos')
+                            : t('lubox.downloader.results.chooseVideos')}
+                    </Button>
+                </div>
             </div>
+            {item.open && (
+                <ol className={styles.entries}>
+                    {entries.map((entry) => (
+                        <li
+                            className={styles.entry}
+                            data-skipped={Boolean(entry.skip)}
+                            key={`${entry.position}-${entry.id}`}
+                        >
+                            <Checkbox
+                                aria-label={entry.title || entry.id || ''}
+                                checked={entry.selected && !entry.skip}
+                                disabled={Boolean(entry.skip)}
+                                onChange={(event) => setEntry(entry, event.currentTarget.checked)}
+                                size="xs"
+                            />
+                            <span className={styles.entryPosition}>{entry.position}</span>
+                            <div className={styles.body}>
+                                <div className={styles.title}>
+                                    <span className={styles.titleText} title={entry.title}>
+                                        {entry.title}
+                                    </span>
+                                    {entry.skip && <Badge size="xs">{entry.skip}</Badge>}
+                                    {entry.in_library && (
+                                        <Badge size="xs">
+                                            {t('lubox.downloader.results.inLibrary')}
+                                        </Badge>
+                                    )}
+                                </div>
+                                <Meta parts={[entry.uploader, formatDuration(entry.duration)]} />
+                            </div>
+                        </li>
+                    ))}
+                </ol>
+            )}
         </li>
     );
 };
@@ -206,8 +216,9 @@ export const CheckResults = ({
     if (items.length === 0) return null;
 
     return (
-        <section>
-            <ul className={styles.list}>
+        <section className={styles.results}>
+            {/* many results scroll inside the list; the Download bar below always stays in view */}
+            <ul className={`${styles.list} ${styles.scrollY}`}>
                 {items.map((item, index) => (
                     <CheckResultRow
                         item={item}
