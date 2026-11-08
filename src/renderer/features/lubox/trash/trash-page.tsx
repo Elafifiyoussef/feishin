@@ -17,6 +17,7 @@ import { openUndoDialog } from '/@/renderer/features/lubox/batch/open-dialogs';
 import { LuboxCover } from '/@/renderer/features/lubox/components/lubox-cover';
 import { LuboxPage } from '/@/renderer/features/lubox/components/lubox-page';
 import { LuboxStateMessage } from '/@/renderer/features/lubox/components/lubox-state-message';
+import { useLuboxAccess } from '/@/renderer/features/lubox/hooks/use-lubox-access';
 import { useLibrarySelection } from '/@/renderer/features/lubox/library/use-library-selection';
 import { openPurgeDialog } from '/@/renderer/features/lubox/trash/purge-dialog';
 import { Badge } from '/@/shared/components/badge/badge';
@@ -98,8 +99,13 @@ export const TrashPage = () => {
     const selection = useLibrarySelection();
     const [restoring, setRestoring] = useState(false);
 
-    const { data: lastBatch } = useQuery(luboxLibraryQueries.lastBatch());
-    const query = useInfiniteQuery(luboxTrashQueries.list());
+    // the trash is admin only in lubox: do not even ask for it otherwise
+    const { isAdmin } = useLuboxAccess();
+    const { data: lastBatch } = useQuery({
+        ...luboxLibraryQueries.lastBatch(),
+        enabled: isAdmin,
+    });
+    const query = useInfiniteQuery({ ...luboxTrashQueries.list(), enabled: isAdmin });
     const items = useMemo(
         () => query.data?.pages.flatMap((page) => page.items) ?? [],
         [query.data],
@@ -191,6 +197,7 @@ export const TrashPage = () => {
 
     return (
         <LuboxPage
+            adminOnly
             count={total}
             footer={
                 items.length > 0 && (

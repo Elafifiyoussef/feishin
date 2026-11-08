@@ -94,11 +94,16 @@ export interface DownloadResponse {
 export interface Job {
     created: number;
     error: null | string;
+    /** waits for another download of the same video and ends as "Already in library" */
+    follows_other?: boolean | number;
     id: number;
     library_path?: null | string;
     playlist_id: null | string;
     playlist_title: null | string;
     position: null | number;
+    /** Navidrome user id of whoever asked for it */
+    requested_by?: null | string;
+    requested_name?: null | string;
     state: JobState;
     title: null | string;
     updated: number;
@@ -124,6 +129,14 @@ export interface LastBatch {
     id: string;
     kind: 'edit' | 'trash';
     label: string;
+}
+
+/** GET /me: who lubox thinks you are. `auth` is false while lubox does not check tokens. */
+export interface LuboxMe {
+    admin: boolean;
+    auth: boolean;
+    id: string;
+    name: string;
 }
 
 export interface LuboxTrack {

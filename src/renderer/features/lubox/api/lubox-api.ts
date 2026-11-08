@@ -36,6 +36,8 @@ export const luboxKeys = {
     all: ['lubox'] as const,
     jobs: () => [...luboxKeys.all, 'jobs'] as const,
     lastBatch: () => [...luboxKeys.all, 'last-batch'] as const,
+    me: () => [...luboxKeys.all, 'me'] as const,
+    session: () => [...luboxKeys.all, 'session'] as const,
     tracks: (filter: TrackFilter) => [...luboxKeys.all, 'tracks', filter] as const,
     tracksAll: () => [...luboxKeys.all, 'tracks'] as const,
     trash: () => [...luboxKeys.all, 'trash'] as const,

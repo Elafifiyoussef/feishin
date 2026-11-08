@@ -23,15 +23,16 @@ interface LuboxMenuGroupProps {
  * "Edit in lubox" for Feishin's song and album context menus: change album, artist or date, or move to
  * trash, for the selected songs (or every song of the selected albums). Every action opens the same
  * preview first, and nothing is written until you confirm.
- * Shows nothing unless the current user may manage lubox (admin, web build, Navidrome).
+ * Any signed-in user may edit; "Move to trash" shows for admins only. Hidden on the desktop app and
+ * on servers other than Navidrome.
  */
 export const LuboxMenuGroup = ({ albumIds, songs }: LuboxMenuGroupProps) => {
     const { t } = useTranslation();
-    const { canManage } = useLuboxAccess();
+    const { isAdmin, isSupported } = useLuboxAccess();
     const queryClient = useQueryClient();
     const { ids, unresolved } = useMemo(() => resolveVideoIds(songs ?? []), [songs]);
 
-    if (!canManage) return null;
+    if (!isSupported) return null;
 
     const run = (actionKey: BatchActionKey) => async () => {
         if (!albumIds) return openBatchDialog({ actionKey, selectedIds: ids });
@@ -101,10 +102,15 @@ export const LuboxMenuGroup = ({ albumIds, songs }: LuboxMenuGroupProps) => {
                 <ContextMenu.Item leftIcon="circleSlash" onSelect={run('clear')}>
                     {t('lubox.batch.actions.albumClear')}
                 </ContextMenu.Item>
-                <ContextMenu.Divider />
-                <ContextMenu.Item leftIcon="delete" onSelect={run('delete')}>
-                    {t('lubox.batch.actions.trash')}
-                </ContextMenu.Item>
+                {/* deleting is admin only in lubox */}
+                {isAdmin && (
+                    <>
+                        <ContextMenu.Divider />
+                        <ContextMenu.Item leftIcon="delete" onSelect={run('delete')}>
+                            {t('lubox.batch.actions.trash')}
+                        </ContextMenu.Item>
+                    </>
+                )}
             </ContextMenu.SubmenuContent>
         </ContextMenu.Submenu>
     );

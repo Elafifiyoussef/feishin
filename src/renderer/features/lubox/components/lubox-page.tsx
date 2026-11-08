@@ -11,6 +11,8 @@ import { PageErrorBoundary } from '/@/renderer/features/shared/components/page-e
 import { ScrollArea } from '/@/shared/components/scroll-area/scroll-area';
 
 interface LuboxPageProps {
+    /** Only lubox admins may use the page (trash). Every other page is for any signed-in user. */
+    adminOnly?: boolean;
     /** Content shown to users who may use the page. */
     children: ReactNode;
     /** Number shown as a badge next to the title (undefined while loading). */
@@ -26,9 +28,10 @@ interface LuboxPageProps {
 
 /**
  * Shared chrome for every lubox page: Feishin's animated page, error boundary and sticky header,
- * plus the admin gate. Pages never repeat this.
+ * plus the access gate (any user, or admins only). Pages never repeat this.
  */
 export const LuboxPage = ({
+    adminOnly = false,
     children,
     count,
     filterBar,
@@ -37,7 +40,8 @@ export const LuboxPage = ({
     title,
 }: LuboxPageProps) => {
     const { t } = useTranslation();
-    const { canManage } = useLuboxAccess();
+    const { isAdmin, isSupported } = useLuboxAccess();
+    const canManage = adminOnly ? isAdmin : isSupported;
 
     return (
         <AnimatedPage>

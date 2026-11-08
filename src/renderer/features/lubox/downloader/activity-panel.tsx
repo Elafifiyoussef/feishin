@@ -7,9 +7,10 @@ import styles from './downloader.module.css';
 
 import { getLuboxErrorMessage } from '/@/renderer/features/lubox/api/client';
 import { luboxQueries, useJobAction } from '/@/renderer/features/lubox/api/lubox-api';
-import { Job, JobState } from '/@/renderer/features/lubox/api/types';
+import { Job, JobsResponse, JobState } from '/@/renderer/features/lubox/api/types';
 import { LuboxCover } from '/@/renderer/features/lubox/components/lubox-cover';
 import { useEta } from '/@/renderer/features/lubox/downloader/use-eta';
+import { useLuboxAccess } from '/@/renderer/features/lubox/hooks/use-lubox-access';
 import { splitActivity, summarize } from '/@/renderer/features/lubox/lib/queue';
 import { AppRoute } from '/@/renderer/router/routes';
 import { Button } from '/@/shared/components/button/button';
@@ -62,6 +63,7 @@ const TitleLink = ({ job }: { job: Job }) => (
 const ActiveRow = memo(({ job }: { job: Job }) => {
     const { t } = useTranslation();
     const action = useJobAction();
+    const { isAdmin } = useLuboxAccess();
 
     const from = job.playlist_title
         ? `${job.playlist_title}${job.position ? ` #${job.position}` : ''}`
@@ -70,8 +72,15 @@ const ActiveRow = memo(({ job }: { job: Job }) => {
         job.state === 'canceled'
             ? t('lubox.downloader.activity.note.canceled')
             : job.state === 'queued'
-              ? t('lubox.downloader.activity.note.waiting')
+              ? job.follows_other
+                  ? t('lubox.downloader.activity.note.followsOther')
+                  : t('lubox.downloader.activity.note.waiting')
               : null;
+    // admins see everyone's downloads, so say whose it is
+    const owner =
+        isAdmin && job.requested_name
+            ? t('lubox.downloader.activity.note.byUser', { name: job.requested_name })
+            : null;
 
     const run = (what: 'cancel' | 'retry') =>
         action.mutate(
@@ -96,7 +105,7 @@ const ActiveRow = memo(({ job }: { job: Job }) => {
             </span>
             <div className={styles.body}>
                 <TitleLink job={job} />
-                <MetaLine parts={[job.uploader, from, note]} />
+                <MetaLine parts={[job.uploader, from, owner, note]} />
                 {job.state === 'failed' && job.error && (
                     <div className={styles.errorText} title={job.error}>
                         {job.error}
@@ -158,9 +167,8 @@ const RecentRow = memo(({ job, locale }: { job: Job; locale: string }) => {
     );
 });
 
-const Summary = () => {
+const Summary = ({ data }: { data?: JobsResponse }) => {
     const { t } = useTranslation();
-    const { data } = useQuery(luboxQueries.jobs());
     const { etaText } = useEta();
 
     if (!data) return null;
@@ -197,9 +205,12 @@ const ListSection = ({ children, title }: { children: React.ReactNode; title: st
  * The activity panel: what is happening now, what failed (only when something did), and the newest
  * few finished downloads. The full history is in the library tools.
  */
-export const ActivityPanel = () => {
+export const ActivityPanel = ({ data: preset }: { data?: JobsResponse } = {}) => {
     const { i18n, t } = useTranslation();
-    const { data, isLoading } = useQuery(luboxQueries.jobs());
+    // `data` is only passed by the states preview page; everywhere else the panel loads and polls /jobs
+    const query = useQuery({ ...luboxQueries.jobs(), enabled: !preset });
+    const data = preset ?? query.data;
+    const isLoading = !preset && query.isLoading;
 
     const activity = useMemo(() => (data ? splitActivity(data.jobs) : null), [data]);
 
@@ -213,7 +224,7 @@ export const ActivityPanel = () => {
                     {t('lubox.downloader.activity.title')}
                 </TextTitle>
             </div>
-            <Summary />
+            <Summary data={data} />
 
             {activity.failed.length > 0 && (
                 <ListSection title={t('lubox.downloader.activity.failed')}>

@@ -99,7 +99,9 @@ export const luboxEn = {
             idle: 'Nothing in progress',
             inProgress: 'In progress',
             note: {
+                byUser: 'for {{name}}',
                 canceled: 'Canceled',
+                followsOther: 'Waiting for the same song from another download',
                 waiting: 'Waiting',
             },
             recent: 'Recently downloaded',
@@ -161,6 +163,7 @@ export const luboxEn = {
         title: 'Downloader',
         toast: {
             alreadyQueued: '{{count}} already queued',
+            overLimit: '{{count}} not added: you already have the most downloads allowed waiting',
             queued: '{{count}} queued',
             skipped: '{{count}} already in library',
             title: 'Download started',

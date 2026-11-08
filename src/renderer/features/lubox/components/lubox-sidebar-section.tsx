@@ -2,7 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 
 import { luboxNavItems } from '/@/renderer/features/lubox/components/lubox-nav-items';
-import { useLuboxAccess } from '/@/renderer/features/lubox/hooks/use-lubox-access';
+import {
+    useLuboxAccess,
+    useLuboxCoverSession,
+} from '/@/renderer/features/lubox/hooks/use-lubox-access';
 import '/@/renderer/features/lubox/i18n/register';
 import { CollapsedSidebarItem } from '/@/renderer/features/sidebar/components/collapsed-sidebar-item';
 import { SidebarItem } from '/@/renderer/features/sidebar/components/sidebar-item';
@@ -12,10 +15,10 @@ import { Icon } from '/@/shared/components/icon/icon';
 import { Text } from '/@/shared/components/text/text';
 
 const useVisibleLuboxItems = () => {
-    const { canManage, isSupported } = useLuboxAccess();
+    const { isAdmin, isSupported } = useLuboxAccess();
 
     if (!isSupported) return [];
-    return luboxNavItems.filter((item) => !item.adminOnly || canManage);
+    return luboxNavItems.filter((item) => !item.adminOnly || isAdmin);
 };
 
 interface LuboxSidebarSectionProps {
@@ -31,6 +34,8 @@ interface LuboxSidebarSectionProps {
 export const LuboxSidebarSection = ({ variant = 'expanded' }: LuboxSidebarSectionProps) => {
     const { t } = useTranslation();
     const items = useVisibleLuboxItems();
+    // the sidebar is always mounted, so it keeps the cover cookie fresh for every lubox page
+    useLuboxCoverSession();
 
     if (items.length === 0) return null;
 

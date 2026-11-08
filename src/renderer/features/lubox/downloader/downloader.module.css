@@ -25,6 +25,10 @@
     .activity {
         position: sticky;
         top: var(--theme-spacing-md);
+        padding-top: 0;
+        padding-left: var(--theme-spacing-xl);
+        border-top: none;
+        border-left: 1px solid var(--theme-colors-border);
     }
 }
 
@@ -35,11 +39,14 @@
     min-width: 0;
 }
 
+/* A line separates the composer from the activity: above it when stacked, to its left when side by side */
 .activity {
     display: flex;
     flex-direction: column;
     gap: var(--theme-spacing-lg);
     min-width: 0;
+    padding-top: var(--theme-spacing-xl);
+    border-top: 1px solid var(--theme-colors-border);
 }
 
 .summary {

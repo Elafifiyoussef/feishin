@@ -13,6 +13,11 @@ import {
 } from '/@/renderer/features/lubox/api/lubox-api';
 import { ActivityPanel } from '/@/renderer/features/lubox/downloader/activity-panel';
 import { CheckResults } from '/@/renderer/features/lubox/downloader/check-results';
+import {
+    EXAMPLE_CHECK,
+    EXAMPLE_JOBS,
+    SHOW_EXAMPLES,
+} from '/@/renderer/features/lubox/downloader/example-data';
 import { LinkComposer } from '/@/renderer/features/lubox/downloader/link-composer';
 import { PauseBanner } from '/@/renderer/features/lubox/downloader/pause-banner';
 import { CheckedItem, toCheckedItem } from '/@/renderer/features/lubox/downloader/types';
@@ -28,7 +33,9 @@ export const DownloaderPage = () => {
     const { etaText } = useEta();
 
     const [text, setText] = useState('');
-    const [checked, setChecked] = useState<CheckedItem[]>([]);
+    const [checked, setChecked] = useState<CheckedItem[]>(() =>
+        SHOW_EXAMPLES ? EXAMPLE_CHECK.map(toCheckedItem) : [],
+    );
     const [status, setStatus] = useState('');
 
     const checkMutation = useCheckLinks();
@@ -87,6 +94,8 @@ export const DownloaderPage = () => {
 
     const handleDownload = () => {
         if (!selection.length) return;
+        // example rows are not real videos: never send them to lubox
+        if (SHOW_EXAMPLES) return;
         downloadMutation.mutate(selection, {
             onError: (error) => toast.error({ message: getLuboxErrorMessage(error) }),
             onSuccess: (data) => {
@@ -97,6 +106,10 @@ export const DownloaderPage = () => {
                     counts.queued && t('lubox.downloader.toast.queued', { count: counts.queued }),
                     counts.skipped &&
                         t('lubox.downloader.toast.skipped', { count: counts.skipped }),
+                    counts['over the limit'] &&
+                        t('lubox.downloader.toast.overLimit', {
+                            count: counts['over the limit'],
+                        }),
                     counts['already queued'] &&
                         t('lubox.downloader.toast.alreadyQueued', {
                             count: counts['already queued'],
@@ -137,7 +150,7 @@ export const DownloaderPage = () => {
                         selectedCount={selection.length}
                     />
                 </div>
-                <ActivityPanel />
+                <ActivityPanel data={SHOW_EXAMPLES ? EXAMPLE_JOBS : undefined} />
             </div>
         </div>
     );

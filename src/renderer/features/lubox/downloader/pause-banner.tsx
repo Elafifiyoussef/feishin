@@ -5,6 +5,7 @@ import styles from './downloader.module.css';
 
 import { getLuboxErrorMessage } from '/@/renderer/features/lubox/api/client';
 import { luboxQueries, useResumeQueue } from '/@/renderer/features/lubox/api/lubox-api';
+import { useLuboxAccess } from '/@/renderer/features/lubox/hooks/use-lubox-access';
 import { Button } from '/@/shared/components/button/button';
 import { Icon } from '/@/shared/components/icon/icon';
 import { Text } from '/@/shared/components/text/text';
@@ -15,6 +16,8 @@ export const PauseBanner = () => {
     const { t } = useTranslation();
     const { data } = useQuery(luboxQueries.jobs());
     const resume = useResumeQueue();
+    // lifting the pause is admin only in lubox; everyone else just sees when it ends
+    const { isAdmin } = useLuboxAccess();
 
     const pause = data?.pause;
     if (!pause?.paused || !pause.paused_until) return null;
@@ -33,21 +36,23 @@ export const PauseBanner = () => {
                     {pause.reason ? ` · ${pause.reason}` : ''}
                 </Text>
             </div>
-            <Button
-                leftSection={<Icon icon="refresh" />}
-                loading={resume.isPending}
-                onClick={() =>
-                    resume.mutate(undefined, {
-                        onError: (error) =>
-                            toast.error({
-                                message: getLuboxErrorMessage(error),
-                            }),
-                    })
-                }
-                variant="default"
-            >
-                {t('lubox.downloader.banner.tryNow')}
-            </Button>
+            {isAdmin && (
+                <Button
+                    leftSection={<Icon icon="refresh" />}
+                    loading={resume.isPending}
+                    onClick={() =>
+                        resume.mutate(undefined, {
+                            onError: (error) =>
+                                toast.error({
+                                    message: getLuboxErrorMessage(error),
+                                }),
+                        })
+                    }
+                    variant="default"
+                >
+                    {t('lubox.downloader.banner.tryNow')}
+                </Button>
+            )}
         </div>
     );
 };

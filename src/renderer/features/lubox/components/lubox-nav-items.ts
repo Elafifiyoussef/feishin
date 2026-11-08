@@ -12,7 +12,7 @@ export interface LuboxNavItem {
 /** Single source for every lubox navigation entry (desktop, collapsed and mobile sidebars). */
 export const luboxNavItems: LuboxNavItem[] = [
     {
-        adminOnly: true,
+        adminOnly: false,
         icon: 'download',
         id: 'download',
         labelKey: 'lubox.nav.download',
