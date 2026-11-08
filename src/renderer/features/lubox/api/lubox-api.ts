@@ -18,7 +18,9 @@ import {
     Job,
     JobsResponse,
     LastBatch,
+    LuboxTrackDetail,
     PauseState,
+    TagField,
     TrackIdsResponse,
     TrackSort,
     TracksResponse,
@@ -65,6 +67,23 @@ export const luboxTrashQueries = {
             retry: false,
         }),
 };
+
+export const fetchTrackDetail = (videoId: string) =>
+    luboxFetch<LuboxTrackDetail>(`/tracks/${encodeURIComponent(videoId)}`);
+
+/** PATCH /tracks/{id}: set some tags by hand (only the ones that changed). */
+export const patchTrack = (videoId: string, changes: Partial<Record<TagField, string>>) =>
+    luboxFetch<LuboxTrackDetail>(`/tracks/${encodeURIComponent(videoId)}`, {
+        body: changes,
+        method: 'PATCH',
+    });
+
+/** POST /tracks/{id}/revert: put these tags back to what the download came with. */
+export const revertTrack = (videoId: string, fields: TagField[]) =>
+    luboxFetch<LuboxTrackDetail>(`/tracks/${encodeURIComponent(videoId)}/revert`, {
+        body: { fields },
+        method: 'POST',
+    });
 
 /** POST /trash/purge: erases the trash folders for good. Name the tracks, or `all`. */
 export const purgeTrash = (target: { all: true } | { video_ids: string[] }) =>

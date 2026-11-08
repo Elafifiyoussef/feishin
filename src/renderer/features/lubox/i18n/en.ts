@@ -166,6 +166,21 @@ export const luboxEn = {
             title: 'Download started',
         },
     },
+    editTags: {
+        cancel: 'Cancel',
+        fields: {
+            album: 'Album',
+            artist: 'Artist',
+            date: 'Date',
+            title: 'Title',
+            track: 'Track number',
+        },
+        notFound: 'This song is not in the lubox library',
+        revert: 'Revert to download',
+        save: 'Save',
+        saved: 'Saved. Navidrome shows the new tags after its next scan.',
+        title: 'Edit tags',
+    },
     library: {
         album: {
             all: 'All albums',

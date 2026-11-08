@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { openBatchDialog } from '/@/renderer/features/lubox/batch/open-dialogs';
+import { openBatchDialog, openEditTagsDialog } from '/@/renderer/features/lubox/batch/open-dialogs';
 import { useLuboxAccess } from '/@/renderer/features/lubox/hooks/use-lubox-access';
 import '/@/renderer/features/lubox/i18n/register';
 import { BatchActionKey } from '/@/renderer/features/lubox/lib/batch';
@@ -70,6 +70,17 @@ export const LuboxMenuGroup = ({ albumIds, songs }: LuboxMenuGroupProps) => {
                     <ContextMenu.Label>
                         {t('lubox.menu.notLubox', { count: unresolved })}
                     </ContextMenu.Label>
+                )}
+                {!albumIds && ids.length === 1 && unresolved === 0 && (
+                    <>
+                        <ContextMenu.Item
+                            leftIcon="edit"
+                            onSelect={() => openEditTagsDialog(ids[0])}
+                        >
+                            {t('lubox.editTags.title')}…
+                        </ContextMenu.Item>
+                        <ContextMenu.Divider />
+                    </>
                 )}
                 <ContextMenu.Item leftIcon="album" onSelect={run('album')}>
                     {t('lubox.batch.actions.albumSet')}

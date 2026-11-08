@@ -3,6 +3,7 @@ import i18n from 'i18next';
 
 import { LastBatch } from '/@/renderer/features/lubox/api/types';
 import { BatchDialogBody } from '/@/renderer/features/lubox/batch/batch-dialog';
+import { EditTagsDialogBody } from '/@/renderer/features/lubox/batch/edit-tags-dialog';
 import { UndoDialogBody } from '/@/renderer/features/lubox/batch/undo-dialog';
 import '/@/renderer/features/lubox/i18n/register';
 import { BatchActionKey } from '/@/renderer/features/lubox/lib/batch';
@@ -44,6 +45,17 @@ export function openBatchDialog(options: {
             count === 1
                 ? i18n.t('lubox.batch.dialog.titleOne', { action })
                 : i18n.t('lubox.batch.dialog.title', { action, count }),
+    });
+}
+
+/** Edit the tags of one track (a lubox video id). */
+export function openEditTagsDialog(videoId: string) {
+    const modalId = `lubox-tags-${(counter += 1)}`;
+    openModal({
+        children: <EditTagsDialogBody onClose={() => closeModal(modalId)} videoId={videoId} />,
+        closeOnClickOutside: false,
+        modalId,
+        title: i18n.t('lubox.editTags.title'),
     });
 }
 

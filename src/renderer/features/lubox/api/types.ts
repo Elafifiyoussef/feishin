@@ -143,12 +143,25 @@ export interface LuboxTrack {
     video_id: string;
 }
 
+/** GET /tracks/{id} (the parts the tag editor uses). `raw` is what the download came with. */
+export interface LuboxTrackDetail {
+    edits: Partial<Record<TagField, unknown>>;
+    raw: TagValues;
+    tags: TagValues;
+    video_id: string;
+}
+
 export interface PauseState {
     backoff: number;
     paused: boolean;
     paused_until: null | number;
     reason: null | string;
 }
+
+/** The tags lubox lets you change on one track. */
+export type TagField = 'album' | 'artist' | 'date' | 'title' | 'track';
+
+export type TagValues = Record<TagField, null | number | string>;
 
 export interface TrackIdsResponse {
     capped: boolean;
