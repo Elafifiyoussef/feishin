@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import styles from './mobile-sidebar.module.css';
 
-import { LuboxSidebarSection } from '/@/renderer/features/lubox/components/lubox-sidebar-section';
+import { MuboxSidebarSection } from '/@/renderer/features/mubox/components/mubox-sidebar-section';
 import { ActionBar } from '/@/renderer/features/sidebar/components/action-bar';
 import { SidebarIcon } from '/@/renderer/features/sidebar/components/sidebar-icon';
 import { SidebarItem } from '/@/renderer/features/sidebar/components/sidebar-item';
@@ -85,7 +85,7 @@ export const MobileSidebar = () => {
                         item: styles.accordionItem,
                         root: styles.accordionRoot,
                     }}
-                    defaultValue={['library', 'lubox', 'playlists']}
+                    defaultValue={['library', 'mubox', 'playlists']}
                     multiple
                 >
                     <Accordion.Item value="library">
@@ -107,7 +107,7 @@ export const MobileSidebar = () => {
                             })}
                         </Accordion.Panel>
                     </Accordion.Item>
-                    <LuboxSidebarSection />
+                    <MuboxSidebarSection />
                     {sidebarPlaylistList && <MobileSidebarPlaylistSection />}
                 </Accordion>
             </ScrollArea>

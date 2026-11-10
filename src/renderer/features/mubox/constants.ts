@@ -1,0 +1,32 @@
+/**
+ * mubox feature constants. Everything mubox-specific lives under features/mubox so upstream
+ * merges stay cheap (see docs/mubox/PLAN.md).
+ */
+
+/** Router (hash) paths owned by this feature. */
+export const MuboxPath = {
+    DOWNLOAD: '/mubox/download',
+    ROOT: '/mubox',
+    TRASH: '/mubox/trash',
+} as const;
+
+/** Splat route registered once in the app router. */
+export const MUBOX_ROUTE_PATTERN = `${MuboxPath.ROOT}/*`;
+
+declare global {
+    interface Window {
+        /** Optional override of the mubox proxy prefix (settings.js), for non-root deployments. */
+        MUBOX_BASE?: string;
+    }
+}
+
+/**
+ * URL prefix of the same-origin proxy to the mubox backend (nginx in production, vite proxy in
+ * dev). The browser never talks to the mubox origin directly, so mubox needs no CORS.
+ */
+export const getMuboxApiBase = (): string => {
+    const configured = typeof window !== 'undefined' ? window.MUBOX_BASE : undefined;
+    const isUsable = configured && !configured.includes('${');
+    const base = isUsable ? configured : '/mubox';
+    return base.replace(/\/+$/, '');
+};

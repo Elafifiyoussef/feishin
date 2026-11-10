@@ -1,0 +1,46 @@
+server {
+  listen 9180;
+  listen [::]:9180;
+  sendfile on;
+  default_type application/octet-stream;
+
+  gzip on;
+  gzip_http_version 1.1;
+  gzip_disable      "MSIE [1-6]\.";
+  gzip_min_length   256;
+  gzip_vary         on;
+  gzip_proxied      expired no-cache no-store private auth;
+  gzip_types        text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+  gzip_comp_level   9;
+
+  # mubox fork: same-origin proxy to the mubox backend (no CORS needed).
+  # Strips the /mubox/ prefix. Cookie and Set-Cookie pass through by default (cover session).
+  # MUBOX_URL has no trailing slash, e.g. http://mubox:8000
+  location /mubox/ {
+    proxy_pass ${MUBOX_URL}/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # /check probes YouTube and /batch can be slow
+    proxy_read_timeout 300s;
+    proxy_send_timeout 300s;
+    client_max_body_size 5m;
+  }
+
+  location ${PUBLIC_PATH} {
+    alias /usr/share/nginx/html/;
+    try_files $uri $uri/ /index.html =404;
+  }
+
+  location ${PUBLIC_PATH}settings.js {
+    alias /etc/nginx/conf.d/settings.js;
+    add_header Cache-Control "no-store";
+  }
+
+  location ${PUBLIC_PATH}/settings.js {
+    alias /etc/nginx/conf.d/settings.js;
+    add_header Cache-Control "no-store";
+  }
+}

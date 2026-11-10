@@ -6,7 +6,7 @@ import { Link, NavLink, useNavigate } from 'react-router';
 
 import styles from './collapsed-sidebar.module.css';
 
-import { LuboxSidebarSection } from '/@/renderer/features/lubox/components/lubox-sidebar-section';
+import { MuboxSidebarSection } from '/@/renderer/features/mubox/components/mubox-sidebar-section';
 import { useScanStatus } from '/@/renderer/features/shared/hooks/use-scan-status';
 import { CollapsedSidebarButton } from '/@/renderer/features/sidebar/components/collapsed-sidebar-button';
 import { CollapsedSidebarItem } from '/@/renderer/features/sidebar/components/collapsed-sidebar-item';
@@ -178,7 +178,7 @@ export const CollapsedSidebar = () => {
                         />
                     ),
                 )}
-                <LuboxSidebarSection variant="collapsed" />
+                <MuboxSidebarSection variant="collapsed" />
                 {sidebarPlaylistList && <CollapsedSidebarPlaylistList />}
             </ScrollArea>
         </motion.div>
