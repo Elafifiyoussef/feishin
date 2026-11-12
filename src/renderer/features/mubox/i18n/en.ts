@@ -312,6 +312,7 @@ export const muboxEn = {
         removeCopy: 'Remove offline copy',
         removed_one: '{{count}} offline copy removed.',
         removed_other: '{{count}} offline copies removed.',
+        showCopy: 'Show offline copy in file manager',
         space_one: '{{count}} song, {{size}} used',
         space_other: '{{count}} songs, {{size}} used',
         started_one: 'Keeping {{count}} song offline...',
