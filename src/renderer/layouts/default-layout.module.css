@@ -24,10 +24,12 @@
 
 /* signed out: no player bar, the page takes the whole height */
 .no-player {
-    grid-template-rows: 0 minmax(0, 1fr) 0;
+    grid-template-rows: 0 100vh 0;
+    grid-template-rows: 0 100dvh 0;
 }
 
 .no-player.windows,
 .no-player.macos {
-    grid-template-rows: 30px minmax(0, 1fr) 0;
+    grid-template-rows: 30px calc(100vh - 30px) 0;
+    grid-template-rows: 30px calc(100dvh - 30px) 0;
 }
