@@ -91,6 +91,8 @@ export type ServerListItem = {
     features?: ServerFeatures;
     id: string;
     isAdmin?: boolean;
+    /** Full URL of the mubox backend (`<address>/mubox`), set when the server was added by a mubox address. */
+    muboxUrl?: string;
     musicFolderId?: string[];
     name: string;
     preferInstantMix?: boolean;

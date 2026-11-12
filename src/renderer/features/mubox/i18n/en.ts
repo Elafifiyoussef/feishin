@@ -94,6 +94,12 @@ export const muboxEn = {
             unnamed: 'Last batch',
         },
     },
+    connect: {
+        tooNew: 'This server is newer than this app. Update the app, then try again.',
+        unconfigured: '{{name}} is not set up yet. Finish its setup in a browser first.',
+        unreachable:
+            'If this is a mubox server, the app could not ask it who it is. Check the address, and on the desktop app turn on Ignore CORS and restart.',
+    },
     cover: {
         albumNote: 'The new cover goes on every song in "{{album}}", including copies made for it.',
         cancel: 'Cancel',

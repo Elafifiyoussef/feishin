@@ -25,7 +25,9 @@ const COVER_SESSION_MS = 3 * 60 * 60 * 1000;
  */
 export const useMuboxAccess = (): MuboxAccess => {
     const server = useCurrentServer();
-    const isSupported = !isElectron() && server?.type === ServerType.NAVIDROME;
+    // the desktop app has no same-origin proxy: it needs the server's own mubox address
+    const isSupported =
+        (!isElectron() || Boolean(server?.muboxUrl)) && server?.type === ServerType.NAVIDROME;
 
     const { data: me } = useQuery({
         enabled: isSupported,

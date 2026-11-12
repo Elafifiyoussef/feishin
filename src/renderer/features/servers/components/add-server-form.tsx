@@ -9,6 +9,7 @@ import {
     isLegacyAuth,
     isServerLock,
 } from '/@/renderer/features/action-required/utils/window-properties';
+import { lookupMuboxServer } from '/@/renderer/features/mubox/servers/mubox-info';
 import JellyfinIcon from '/@/renderer/features/servers/assets/jellyfin.png';
 import NavidromeIcon from '/@/renderer/features/servers/assets/navidrome.png';
 import SubsonicIcon from '/@/renderer/features/servers/assets/opensubsonic.png';
@@ -36,6 +37,9 @@ import { useFocusTrap } from '/@/shared/hooks/use-focus-trap';
 import { useForm } from '/@/shared/hooks/use-form';
 import { AuthenticationResponse, ServerListItemWithCredential } from '/@/shared/types/domain-types';
 import { DiscoveredServerItem, ServerType, toServerType } from '/@/shared/types/types';
+import '/@/renderer/features/mubox/i18n/register';
+
+const DEFAULT_SERVER_NAME = 'My Server';
 
 const autodiscover = isElectron() ? window.api.autodiscover : null;
 const localSettings = isElectron() ? window.api.localSettings : null;
@@ -115,7 +119,8 @@ export const AddServerForm = ({ onCancel }: AddServerFormProps) => {
             enableAudiobooks: undefined,
             legacyAuth: isLegacyAuth(),
             name:
-                (localSettings ? localSettings.env.SERVER_NAME : window.SERVER_NAME) || 'My Server',
+                (localSettings ? localSettings.env.SERVER_NAME : window.SERVER_NAME) ||
+                DEFAULT_SERVER_NAME,
             password: '',
             preferInstantMix: undefined,
             preferRemoteUrl: false,
@@ -205,15 +210,52 @@ export const AddServerForm = ({ onCancel }: AddServerFormProps) => {
 
         try {
             setIsLoading(true);
-            const data: AuthenticationResponse | undefined = await authFunction(
-                values.url,
-                {
-                    legacy: values.legacyAuth,
-                    password: values.password,
-                    username: values.username,
-                },
-                values.type as ServerType,
-            );
+
+            // One address: ask a mubox server what it is, then use its Navidrome path (ADR-0013)
+            let url = values.url;
+            let name = values.name;
+            let muboxUrl: string | undefined;
+            let lookupFailed = false;
+            if (values.type === ServerType.NAVIDROME) {
+                const found = await lookupMuboxServer(values.url);
+                if (found.kind === 'tooNew') {
+                    setIsLoading(false);
+                    return toast.error({ message: t('mubox.connect.tooNew') });
+                }
+                if (found.kind === 'unconfigured') {
+                    setIsLoading(false);
+                    return toast.error({
+                        message: t('mubox.connect.unconfigured', { name: found.name }),
+                    });
+                }
+                lookupFailed = found.kind === 'unreachable';
+                if (found.kind === 'mubox') {
+                    url = found.navidromeUrl;
+                    if (!name || name === DEFAULT_SERVER_NAME) name = found.info.name;
+                    // the web build reaches mubox through its own same-origin proxy
+                    if (isElectron()) muboxUrl = found.muboxUrl;
+                }
+            }
+
+            let data: AuthenticationResponse | undefined;
+            try {
+                data = await authFunction(
+                    url,
+                    {
+                        legacy: values.legacyAuth,
+                        password: values.password,
+                        username: values.username,
+                    },
+                    values.type as ServerType,
+                );
+            } catch (err: any) {
+                if (lookupFailed) {
+                    throw new Error(
+                        `${err?.message ?? ''} ${t('mubox.connect.unreachable')}`.trim(),
+                    );
+                }
+                throw err;
+            }
 
             if (!data) {
                 return toast.error({
@@ -225,9 +267,9 @@ export const AddServerForm = ({ onCancel }: AddServerFormProps) => {
                 credential: data.credential,
                 id: nanoid(),
                 isAdmin: data.isAdmin,
-                name: values.name,
+                name,
                 type: values.type as ServerType,
-                url: normalizeServerUrl(values.url),
+                url: normalizeServerUrl(url),
                 userId: data.userId,
                 username: data.username,
             };
@@ -255,6 +297,8 @@ export const AddServerForm = ({ onCancel }: AddServerFormProps) => {
             if (data.ndCredential !== undefined) {
                 serverItem.ndCredential = data.ndCredential;
             }
+
+            if (muboxUrl) serverItem.muboxUrl = muboxUrl;
 
             addServer(serverItem);
             setCurrentServer(serverItem);
