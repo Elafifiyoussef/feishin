@@ -13,6 +13,8 @@ RUN corepack enable && corepack prepare pnpm@11.5.2 --activate
 RUN pnpm install
 
 COPY . .
+# The web build runs out of memory on Node's default heap (~2 GB); build:electron uses the same 4096
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN pnpm run build:web
 
 # --- Production stage
