@@ -140,6 +140,7 @@ export const useCurrentServer = () =>
             features: state.currentServer?.features,
             id: state.currentServer?.id,
             isAdmin: state.currentServer?.isAdmin,
+            muboxUrl: state.currentServer?.muboxUrl,
             musicFolderId: state.currentServer?.musicFolderId,
             name: state.currentServer?.name,
             preferInstantMix: state.currentServer?.preferInstantMix,
