@@ -7,6 +7,7 @@ import { ContextMenuController } from '/@/renderer/features/context-menu/context
 import { MainContent } from '/@/renderer/layouts/default-layout/main-content';
 import { PlayerBar } from '/@/renderer/layouts/default-layout/player-bar';
 import { WindowBar } from '/@/renderer/layouts/window-bar';
+import { useCurrentServerWithCredential } from '/@/renderer/store';
 import { useSettingsStore, useWindowBarStyle } from '/@/renderer/store/settings.store';
 import { Platform, PlayerType } from '/@/shared/types/types';
 
@@ -24,12 +25,14 @@ interface DefaultLayoutProps {
 
 export const DefaultLayout = ({ shell }: DefaultLayoutProps) => {
     const windowBarStyle = useWindowBarStyle();
+    const hasServer = Boolean(useCurrentServerWithCredential());
 
     return (
         <>
             <div
                 className={clsx(styles.layout, {
                     [styles.macos]: windowBarStyle === Platform.MACOS,
+                    [styles.noPlayer]: !hasServer,
                     [styles.windows]: windowBarStyle === Platform.WINDOWS,
                 })}
                 id="default-layout"

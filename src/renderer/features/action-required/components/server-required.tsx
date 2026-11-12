@@ -1,10 +1,13 @@
-import { closeAllModals, openModal } from '@mantine/modals';
+import { closeAllModals, closeModal, openModal } from '@mantine/modals';
+import i18n from 'i18next';
 import isElectron from 'is-electron';
+import { MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import styles from '/@/renderer/features/action-required/components/server-required.module.css';
 import { isServerLock } from '/@/renderer/features/action-required/utils/window-properties';
+import '/@/renderer/features/mubox/i18n/register';
 import JellyfinLogo from '/@/renderer/features/servers/assets/jellyfin.png';
 import NavidromeLogo from '/@/renderer/features/servers/assets/navidrome.png';
 import OpenSubsonicLogo from '/@/renderer/features/servers/assets/opensubsonic.png';
@@ -12,12 +15,10 @@ import { AddServerForm } from '/@/renderer/features/servers/components/add-serve
 import { EditServerForm } from '/@/renderer/features/servers/components/edit-server-form';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useAuthStoreActions, useCurrentServer, useServerList } from '/@/renderer/store';
-import { Button } from '/@/shared/components/button/button';
-import { Divider } from '/@/shared/components/divider/divider';
-import { Group } from '/@/shared/components/group/group';
+import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
 import { Icon } from '/@/shared/components/icon/icon';
+import { ConfirmModal } from '/@/shared/components/modal/modal';
 import { ScrollArea } from '/@/shared/components/scroll-area/scroll-area';
-import { Stack } from '/@/shared/components/stack/stack';
 import { Text } from '/@/shared/components/text/text';
 import {
     ServerListItem,
@@ -27,21 +28,25 @@ import {
 
 const localSettings = isElectron() ? window.api.localSettings : null;
 
+const openAddServerModal = () => {
+    openModal({
+        children: <AddServerForm onCancel={closeAllModals} />,
+        size: 'lg',
+        title: i18n.t('mubox.servers.add'),
+    });
+};
+
+/**
+ * No saved servers: the add form on its own. Otherwise the saved servers as cards, with a plus card
+ * that opens the same form in a popup (so the page never has to scroll).
+ */
 export const ServerRequired = () => {
     const serverList = useServerList();
 
     if (Object.keys(serverList).length > 0) {
         return (
             <ScrollArea>
-                <Stack className={styles.list}>
-                    <ServerSelector />
-                    {!isServerLock() && (
-                        <>
-                            <Divider my="lg" />
-                            <AddServerForm onCancel={null} />
-                        </>
-                    )}
-                </Stack>
+                <SavedServers />
             </ScrollArea>
         );
     }
@@ -49,7 +54,35 @@ export const ServerRequired = () => {
     return <AddServerForm onCancel={null} />;
 };
 
-function ServerSelector() {
+const RemoveServerBody = ({ modalId, server }: { modalId: string; server: ServerListItem }) => {
+    const { t } = useTranslation();
+    const { deleteServer } = useAuthStoreActions();
+
+    return (
+        <ConfirmModal
+            labels={{ cancel: t('common.cancel'), confirm: t('page.manageServers.removeServer') }}
+            onCancel={() => closeModal(modalId)}
+            onConfirm={() => {
+                deleteServer(server.id);
+                localSettings?.passwordRemove(server.id);
+                closeModal(modalId);
+            }}
+        >
+            <Text>{t('mubox.servers.removeBody', { name: server.name, url: server.url })}</Text>
+        </ConfirmModal>
+    );
+};
+
+const openRemoveServerModal = (server: ServerListItem) => {
+    const modalId = `remove-server-${server.id}`;
+    openModal({
+        children: <RemoveServerBody modalId={modalId} server={server} />,
+        modalId,
+        title: i18n.t('page.manageServers.removeServer'),
+    });
+};
+
+function SavedServers() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const serverList = useServerList();
@@ -86,7 +119,7 @@ function ServerSelector() {
     };
 
     return (
-        <>
+        <div className={styles.grid}>
             {Object.keys(serverList).map((serverId) => {
                 const server = serverList[serverId];
                 const isNavidromeExpired =
@@ -103,36 +136,64 @@ function ServerSelector() {
                           ? JellyfinLogo
                           : OpenSubsonicLogo;
 
+                const open = () => {
+                    if (!isSessionExpired) return handleSetCurrentServer(server);
+                    return handleCredentialsModal(server);
+                };
+
                 return (
-                    <Button
-                        classNames={{
-                            label: styles.serverButtonLabel,
-                            root: styles.serverButton,
-                        }}
+                    <div
+                        className={styles.card}
+                        data-current={server.id === currentServer?.id && !isSessionExpired}
                         key={`server-${server.id}`}
-                        onClick={() => {
-                            if (!isSessionExpired) return handleSetCurrentServer(server);
-                            return handleCredentialsModal(server);
+                        onClick={open}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                open();
+                            }
                         }}
-                        size="lg"
-                        variant={
-                            server.id === currentServer?.id && !isSessionExpired
-                                ? 'filled'
-                                : 'default'
-                        }
+                        role="button"
+                        tabIndex={0}
                     >
-                        <Group className={styles.serverRow} justify="space-between">
-                            <Group>
-                                <img alt="" className={styles.serverLogo} src={logo} />
-                                <Text fw={600} size="lg">
-                                    {server.name}
-                                </Text>
-                            </Group>
-                            {isSessionExpired ? <Icon icon="lock" /> : <Icon icon="arrowRight" />}
-                        </Group>
-                    </Button>
+                        <div className={styles.cardTop}>
+                            <img alt="" className={styles.logo} src={logo} />
+                            <span className={styles.cardIcons}>
+                                {isSessionExpired && <Icon color="muted" icon="lock" />}
+                                <ActionIcon
+                                    aria-label={t('page.manageServers.removeServer')}
+                                    icon="delete"
+                                    onClick={(event: MouseEvent) => {
+                                        event.stopPropagation();
+                                        openRemoveServerModal(server);
+                                    }}
+                                    size="sm"
+                                    tooltip={{ label: t('page.manageServers.removeServer') }}
+                                    variant="subtle"
+                                />
+                            </span>
+                        </div>
+                        <div className={styles.cardBody}>
+                            <span className={styles.cardName}>{server.name}</span>
+                            <span className={styles.cardMeta} title={server.url}>
+                                {server.url}
+                            </span>
+                            <span className={styles.cardMeta}>{server.username}</span>
+                        </div>
+                    </div>
                 );
             })}
-        </>
+            {!isServerLock() && (
+                <button
+                    aria-label={t('mubox.servers.add')}
+                    className={styles.addCard}
+                    onClick={openAddServerModal}
+                    type="button"
+                >
+                    <Icon icon="add" size="3xl" />
+                    <span>{t('mubox.servers.add')}</span>
+                </button>
+            )}
+        </div>
     );
 }

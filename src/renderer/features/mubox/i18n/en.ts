@@ -286,6 +286,11 @@ export const muboxEn = {
         trash: { title: 'Trash' },
         users: { title: 'Accounts' },
     },
+    servers: {
+        add: 'Add a server',
+        removeBody:
+            'Remove {{name}} ({{url}}) from this app? Your music is not touched, and you can add the server again later.',
+    },
     status: {
         comingSoon: 'This page is being built.',
         reachable: 'mubox is reachable.',

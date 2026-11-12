@@ -11,7 +11,11 @@ import { MobileFullscreenPlayer } from '/@/renderer/features/player/components/m
 import { MobileSidebar } from '/@/renderer/features/sidebar/components/mobile-sidebar';
 import { PlayerBar } from '/@/renderer/layouts/default-layout/player-bar';
 import { WindowBar } from '/@/renderer/layouts/window-bar';
-import { useFullScreenPlayerOverlayState, useWindowBarStyle } from '/@/renderer/store';
+import {
+    useCurrentServerWithCredential,
+    useFullScreenPlayerOverlayState,
+    useWindowBarStyle,
+} from '/@/renderer/store';
 import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
 import { Drawer } from '/@/shared/components/drawer/drawer';
 import { Spinner } from '/@/shared/components/spinner/spinner';
@@ -29,12 +33,14 @@ export const MobileLayout = ({ shell }: MobileLayoutProps) => {
         visualizerExpanded: isFullScreenVisualizerExpanded,
     } = useFullScreenPlayerOverlayState();
     const windowBarStyle = useWindowBarStyle();
+    const hasServer = Boolean(useCurrentServerWithCredential());
 
     return (
         <>
             <div
                 className={clsx(styles.layout, {
                     [styles.macos]: windowBarStyle === Platform.MACOS,
+                    [styles.noPlayer]: !hasServer,
                     [styles.windows]: windowBarStyle === Platform.WINDOWS,
                 })}
                 id="mobile-layout"
