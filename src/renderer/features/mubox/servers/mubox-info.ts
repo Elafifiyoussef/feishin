@@ -1,3 +1,5 @@
+import isElectron from 'is-electron';
+
 /** What a mubox server says about itself at `<address>/mubox/info` (ADR-0013, no sign-in needed). */
 export interface MuboxInfo {
     api: number;
@@ -32,17 +34,25 @@ export const lookupMuboxServer = async (
     const address = trimSlashes(rawAddress.trim());
 
     let info: MuboxInfo;
-    try {
-        const response = await fetch(`${address}/mubox/info`, {
-            headers: { Accept: 'application/json' },
-            signal,
-        });
-        if (!response.ok) return { kind: 'other' };
-        info = await response.json().catch(() => null);
-    } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') throw error;
-        // network failure, or the browser refusing it (CORS)
-        return { kind: 'unreachable' };
+    if (isElectron()) {
+        // asked from the main process: no CORS, whatever the renderer is served from
+        const answer = await window.api.mubox.fetchInfo(address);
+        if (!answer) return { kind: 'unreachable' };
+        if (answer.status < 200 || answer.status >= 300) return { kind: 'other' };
+        info = answer.body;
+    } else {
+        try {
+            const response = await fetch(`${address}/mubox/info`, {
+                headers: { Accept: 'application/json' },
+                signal,
+            });
+            if (!response.ok) return { kind: 'other' };
+            info = await response.json().catch(() => null);
+        } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') throw error;
+            // network failure, or the browser refusing it (CORS)
+            return { kind: 'unreachable' };
+        }
     }
 
     if (info?.app !== 'mubox') return { kind: 'other' };

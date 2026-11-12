@@ -10,6 +10,7 @@ import { localSettings } from './local-settings';
 import { lyrics } from './lyrics';
 import { mpris } from './mpris';
 import { mpvPlayer, mpvPlayerListener } from './mpv-player';
+import { mubox } from './mubox';
 import { offline } from './offline';
 import { remote } from './remote';
 import { utils } from './utils';
@@ -30,6 +31,7 @@ const api = {
     mpris,
     mpvPlayer,
     mpvPlayerListener,
+    mubox,
     offline,
     remote,
     utils,

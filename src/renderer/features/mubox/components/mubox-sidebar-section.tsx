@@ -6,11 +6,12 @@ import {
     useMuboxAccess,
     useMuboxCoverSession,
 } from '/@/renderer/features/mubox/hooks/use-mubox-access';
+import { useMuboxServerProbe } from '/@/renderer/features/mubox/hooks/use-mubox-probe';
 import {
     OfflineCollapsedEntry,
     OfflineSidebarEntry,
 } from '/@/renderer/features/offline/components/offline-sidebar-entry';
-import { isOfflineSupported } from '/@/renderer/features/offline/offline-store';
+import { isOfflineSupported, useOfflineStore } from '/@/renderer/features/offline/offline-store';
 import '/@/renderer/features/mubox/i18n/register';
 import { CollapsedSidebarItem } from '/@/renderer/features/sidebar/components/collapsed-sidebar-item';
 import { SidebarItem } from '/@/renderer/features/sidebar/components/sidebar-item';
@@ -41,6 +42,10 @@ export const MuboxSidebarSection = ({ variant = 'expanded' }: MuboxSidebarSectio
     const items = useVisibleMuboxItems();
     // the sidebar is always mounted, so it keeps the cover cookie fresh for every mubox page
     useMuboxCoverSession();
+    // servers saved before the connect flow have no mubox address yet: find it (desktop app)
+    useMuboxServerProbe();
+    // the mubox pages talk to the server: grey them out while the offline library is on
+    const offlineMode = useOfflineStore((state) => state.offlineMode);
 
     // kept songs (offline library) exist on the desktop app for every server, mubox or not
     if (items.length === 0 && !isOfflineSupported) return null;
@@ -53,6 +58,7 @@ export const MuboxSidebarSection = ({ variant = 'expanded' }: MuboxSidebarSectio
                     <CollapsedSidebarItem
                         activeIcon={<Icon color="primary" icon={item.icon} size="2xl" />}
                         component={NavLink}
+                        disabled={offlineMode}
                         icon={<Icon color="muted" icon={item.icon} size="2xl" />}
                         key={item.id}
                         label={t(item.labelKey)}
@@ -74,7 +80,7 @@ export const MuboxSidebarSection = ({ variant = 'expanded' }: MuboxSidebarSectio
             <Accordion.Panel>
                 {isOfflineSupported && <OfflineSidebarEntry />}
                 {items.map((item) => (
-                    <SidebarItem key={item.id} to={item.to}>
+                    <SidebarItem disabled={offlineMode} key={item.id} to={item.to}>
                         <Group gap="md">
                             <Icon icon={item.icon} />
                             {t(item.labelKey)}

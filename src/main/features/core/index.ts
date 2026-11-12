@@ -2,6 +2,7 @@ import './autodiscover';
 import './dlna';
 import './custom-themes';
 import './lyrics';
+import './mubox';
 import './offline';
 import './player';
 import './remote';
