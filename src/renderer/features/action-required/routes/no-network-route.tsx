@@ -1,7 +1,9 @@
+import isElectron from 'is-electron';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { PageHeader } from '/@/renderer/components/page-header/page-header';
+import '/@/renderer/features/mubox/i18n/register';
 import { AnimatedPage } from '/@/renderer/features/shared/components/animated-page';
 import { PageErrorBoundary } from '/@/renderer/features/shared/components/page-error-boundary';
 import { AppRoute } from '/@/renderer/router/routes';
@@ -34,6 +36,15 @@ const NoNetworkRoute = () => {
                             {t('error.noNetworkDescription')}
                         </Text>
                     </Stack>
+                    {isElectron() && (
+                        <Button
+                            leftSection={<Icon icon="server" />}
+                            onClick={() => navigate('/mubox/offline')}
+                            variant="default"
+                        >
+                            {t('mubox.offline.title')}
+                        </Button>
+                    )}
                     <Button
                         leftSection={<Icon icon="refresh" />}
                         onClick={handleRetry}

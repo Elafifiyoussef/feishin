@@ -88,6 +88,13 @@ const SettingsRoute = lazy(() => import('/@/renderer/features/settings/routes/se
 
 const MuboxRoute = lazy(() => import('/@/renderer/features/mubox/routes/mubox-route'));
 
+// outside the sign-in guard on purpose: kept songs must open when the server is down
+const OfflineRoute = lazy(() =>
+    import('/@/renderer/features/offline/offline-page').then((module) => ({
+        default: module.OfflinePage,
+    })),
+);
+
 const LazyLyricsSettingsContextModal = lazy(() =>
     import('/@/renderer/features/lyrics/components/lyrics-settings-modal').then((module) => ({
         default: module.LyricsSettingsContextModal,
@@ -355,6 +362,7 @@ export const AppRouter = () => {
                             </Route>
                             <Route element={<ResponsiveLayout />}>
                                 <Route element={<NoNetworkRoute />} path={AppRoute.NO_NETWORK} />
+                                <Route element={<OfflineRoute />} path="/mubox/offline" />
                             </Route>
                         </Route>
                     </Routes>

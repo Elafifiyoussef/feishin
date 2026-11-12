@@ -6,6 +6,7 @@ import {
     useMuboxAccess,
     useMuboxCoverSession,
 } from '/@/renderer/features/mubox/hooks/use-mubox-access';
+import { isOfflineSupported } from '/@/renderer/features/offline/offline-store';
 import '/@/renderer/features/mubox/i18n/register';
 import { CollapsedSidebarItem } from '/@/renderer/features/sidebar/components/collapsed-sidebar-item';
 import { SidebarItem } from '/@/renderer/features/sidebar/components/sidebar-item';
@@ -17,8 +18,9 @@ import { Text } from '/@/shared/components/text/text';
 const useVisibleMuboxItems = () => {
     const { isAdmin, isSupported } = useMuboxAccess();
 
-    if (!isSupported) return [];
-    return muboxNavItems.filter((item) => !item.adminOnly || isAdmin);
+    return muboxNavItems.filter((item) =>
+        item.desktopOnly ? isOfflineSupported : isSupported && (!item.adminOnly || isAdmin),
+    );
 };
 
 interface MuboxSidebarSectionProps {
