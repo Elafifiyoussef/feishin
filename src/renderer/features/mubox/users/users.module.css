@@ -1,0 +1,161 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-xl);
+    width: 100%;
+    max-width: 60rem;
+    padding: var(--theme-spacing-md);
+    margin: 0 auto;
+    container-type: inline-size;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-md);
+    padding: var(--theme-spacing-md);
+    background: var(--theme-colors-surface);
+    border-radius: var(--theme-radius-md);
+}
+
+.card-title {
+    font-weight: 500;
+    color: var(--theme-colors-foreground);
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--theme-spacing-md);
+    align-items: flex-start;
+}
+
+.field {
+    flex: 1 1 12rem;
+    max-width: 18rem;
+}
+
+/* lines up with the inputs, not with their labels */
+.submit {
+    align-self: flex-end;
+}
+
+.hint {
+    font-size: var(--theme-font-size-sm);
+    color: var(--theme-colors-foreground-muted);
+}
+
+/* the made-up password: stands out, because it is shown only once */
+.handover {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-sm);
+    padding: var(--theme-spacing-md);
+    background: var(--theme-colors-primary-transparent);
+    border: 1px solid var(--theme-colors-primary-filled);
+    border-radius: var(--theme-radius-md);
+}
+
+.handover-head {
+    display: flex;
+    gap: var(--theme-spacing-md);
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 500;
+}
+
+.handover-grid {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--theme-spacing-xs) var(--theme-spacing-lg);
+    margin: 0;
+}
+
+.handover-grid dt {
+    color: var(--theme-colors-foreground-muted);
+}
+
+.handover-grid dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.secret {
+    font-family: monospace;
+    font-size: var(--theme-font-size-lg);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.handover-actions {
+    display: flex;
+    gap: var(--theme-spacing-sm);
+}
+
+/* the accounts table: header row plus rows, like the trash list */
+.list {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    list-style: none;
+    border: 1px solid var(--theme-colors-border);
+    border-radius: var(--theme-radius-md);
+}
+
+.row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 5rem;
+    gap: var(--theme-spacing-md);
+    align-items: center;
+    padding: var(--theme-spacing-sm) var(--theme-spacing-md);
+    border-bottom: 1px solid var(--theme-colors-border);
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.row-body:hover {
+    background: var(--theme-colors-surface);
+}
+
+.row-head {
+    font-size: var(--theme-font-size-sm);
+    font-weight: 500;
+    color: var(--theme-colors-foreground-muted);
+    background: var(--theme-colors-surface);
+}
+
+.cell-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    color: var(--theme-colors-foreground);
+    white-space: nowrap;
+}
+
+.cell-seen {
+    display: none;
+    font-size: var(--theme-font-size-sm);
+    color: var(--theme-colors-foreground-muted);
+}
+
+@container (min-width: 32rem) {
+    .row {
+        grid-template-columns: minmax(0, 1fr) 5rem 9rem;
+    }
+
+    .cell-seen {
+        display: block;
+    }
+}
+
+/* the card is the same colour as a default input: draw the edge so the field is visible */
+.field input {
+    border-color: var(--theme-colors-border);
+}
