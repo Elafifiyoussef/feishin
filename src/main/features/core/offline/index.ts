@@ -77,7 +77,12 @@ class JobError extends Error {
 const classify = (error: any): JobError => {
     if (error instanceof JobError) return error;
     if (error?.code === 'ENOSPC') return new JobError('disk-full', 'The disk is full');
-    if (error instanceof TypeError || error?.cause?.code) {
+    // Chromium's network stack reports failures as "net::ERR_..." errors
+    if (
+        error instanceof TypeError ||
+        error?.cause?.code ||
+        String(error?.message).startsWith('net::')
+    ) {
         return new JobError('unreachable', 'The server is not reachable');
     }
     return new JobError('unknown', String(error?.message ?? error));
