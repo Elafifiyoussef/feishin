@@ -7,6 +7,7 @@ import { DownloaderPage } from '/@/renderer/features/mubox/downloader/downloader
 import '/@/renderer/features/mubox/i18n/register';
 import { InvalidRoute } from '/@/renderer/features/mubox/routes/invalid-route';
 import { TrashPage } from '/@/renderer/features/mubox/trash/trash-page';
+import { UsersPage } from '/@/renderer/features/mubox/users/users-page';
 
 const DownloadPage = () => {
     const { t } = useTranslation();
@@ -26,6 +27,7 @@ const MuboxRoute = () => (
         <Route element={<Navigate replace to={MuboxPath.DOWNLOAD} />} index />
         <Route element={<DownloadPage />} path="download" />
         <Route element={<TrashPage />} path="trash" />
+        <Route element={<UsersPage />} path="users" />
         <Route element={<InvalidRoute />} path="*" />
     </Routes>
 );

@@ -25,4 +25,11 @@ export const muboxNavItems: MuboxNavItem[] = [
         labelKey: 'mubox.nav.trash',
         to: MuboxPath.TRASH,
     },
+    {
+        adminOnly: true,
+        icon: 'user',
+        id: 'users',
+        labelKey: 'mubox.nav.users',
+        to: MuboxPath.USERS,
+    },
 ];

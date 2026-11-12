@@ -279,10 +279,12 @@ export const muboxEn = {
         download: 'Downloader',
         title: 'mubox',
         trash: 'Trash',
+        users: 'Accounts',
     },
     pages: {
         download: { title: 'Downloader' },
         trash: { title: 'Trash' },
+        users: { title: 'Accounts' },
     },
     status: {
         comingSoon: 'This page is being built.',
@@ -320,5 +322,18 @@ export const muboxEn = {
         selectNone: 'Select tracks to restore them',
         trashed: 'Deleted',
         undo: 'Undo last change',
+    },
+    users: {
+        add: 'Add an account',
+        admin: 'Admin',
+        copied: 'Copied',
+        copy: 'Copy',
+        create: 'Create account',
+        created: 'Account {{username}} created',
+        handover: 'Server: {{address}}\nUser name: {{username}}\nPassword: {{password}}',
+        password: 'Password',
+        passwordHint: 'Leave empty to make one up. Friends can change it in the app.',
+        shownOnce: 'The password is shown only now. Pass it on to your friend.',
+        username: 'User name',
     },
 };

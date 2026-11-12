@@ -10,6 +10,7 @@ export const MuboxPath = {
     DOWNLOAD: '/mubox/download',
     ROOT: '/mubox',
     TRASH: '/mubox/trash',
+    USERS: '/mubox/users',
 } as const;
 
 /** Splat route registered once in the app router. */
