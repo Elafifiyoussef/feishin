@@ -343,6 +343,18 @@ function createGithubUpdaterInstance(
 
 protocol.registerSchemesAsPrivileged([
     { privileges: { bypassCSP: true, corsEnabled: true }, scheme: 'feishin' },
+    // kept songs and covers (features/core/offline): the audio element needs range requests (stream)
+    {
+        privileges: {
+            bypassCSP: true,
+            corsEnabled: true,
+            secure: true,
+            standard: true,
+            stream: true,
+            supportFetchAPI: true,
+        },
+        scheme: 'mubox-offline',
+    },
 ]);
 
 process.on('uncaughtException', (error: any) => {
