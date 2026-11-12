@@ -187,12 +187,14 @@ const UsersTable = ({
                     <div className={`${styles.row} ${styles.rowBody}`}>
                         <span className={styles.cellName} title={user.username}>
                             {user.username}
+                            {user.you && (
+                                <span className={styles.you}>({t('mubox.users.you')})</span>
+                            )}
                         </span>
                         <span>
                             <Badge variant={user.admin ? 'filled' : 'default'}>
                                 {user.admin ? t('mubox.users.admin') : t('mubox.users.user')}
                             </Badge>
-                            {user.you && <span className={styles.you}>{t('mubox.users.you')}</span>}
                         </span>
                         <span className={styles.cellSeen}>
                             {formatSeen(user.last_seen, t('mubox.users.never'))}

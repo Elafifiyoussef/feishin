@@ -172,6 +172,7 @@
 
 .you {
     margin-left: var(--theme-spacing-sm);
-    font-size: var(--theme-font-size-xs);
+    font-size: var(--theme-font-size-sm);
+    font-weight: 400;
     color: var(--theme-colors-foreground-muted);
 }
