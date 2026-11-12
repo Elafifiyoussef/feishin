@@ -1,8 +1,10 @@
 import i18n from '/@/i18n/i18n';
 import { JellyfinController } from '/@/renderer/api/jellyfin/jellyfin-controller';
 import { NavidromeController } from '/@/renderer/api/navidrome/navidrome-controller';
+import { OfflineController } from '/@/renderer/api/offline/offline-controller';
 import { SubsonicController } from '/@/renderer/api/subsonic/subsonic-controller';
 import { mergeMusicFolderId } from '/@/renderer/api/utils-music-folder';
+import { isOfflineMode } from '/@/renderer/features/offline/offline-store';
 import { getServerById, useAuthStore, useSettingsStore } from '/@/renderer/store';
 import { logger } from '/@/renderer/utils/logger';
 import { toast } from '/@/shared/components/toast/toast';
@@ -133,7 +135,15 @@ const apiController = <K extends keyof ControllerEndpoint>(
         throw new Error(`No server selected`);
     }
 
-    const controllerFn = endpoints?.[serverType]?.[endpoint];
+    // the offline library answers instead of the server while it is on (never for signing in)
+    const isOffline = endpoint !== 'authenticate' && isOfflineMode();
+    if (isOffline && typeof OfflineController[endpoint] !== 'function') {
+        throw new Error(i18n.t('mubox.offline.notAvailable') as string);
+    }
+
+    const controllerFn = isOffline
+        ? OfflineController[endpoint]
+        : endpoints?.[serverType]?.[endpoint];
 
     if (typeof controllerFn !== 'function') {
         logger.error(`Endpoint ${endpoint} is not implemented for ${serverType}`, {
@@ -150,7 +160,7 @@ const apiController = <K extends keyof ControllerEndpoint>(
     }
 
     if (OMITTED_CONTROLLER_LOG_ENDPOINTS.has(endpoint)) {
-        return controllerFn;
+        return controllerFn as NonNullable<InternalControllerEndpoint[K]>;
     }
 
     return ((...args: unknown[]) => {

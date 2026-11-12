@@ -1,42 +1,47 @@
 import i18n from 'i18next';
 import isElectron from 'is-electron';
-import { nanoid } from 'nanoid/non-secure';
 import { createWithEqualityFn } from 'zustand/traditional';
 
-import { api } from '/@/renderer/api';
 import '/@/renderer/features/mubox/i18n/register';
+import { queryClient } from '/@/renderer/lib/react-query';
 import { toast } from '/@/shared/components/toast/toast';
-import { LibraryItem, Song } from '/@/shared/types/domain-types';
-import {
-    OfflineEntry,
-    OfflineKeepItem,
-    OfflineProgress,
-    offlineUrl,
-} from '/@/shared/types/offline-types';
+import { Song } from '/@/shared/types/domain-types';
+import { OfflineEntry, OfflineProgress, offlineUrl } from '/@/shared/types/offline-types';
 
 /**
  * Renderer side of "Keep offline" (desktop only). The index lives in the main process
- * (features/core/offline); this store mirrors it so lists and the player can ask synchronously.
+ * (features/core/offline); this store mirrors it so lists, the player and the offline API
+ * controller (api/offline) can ask synchronously.
  */
 
-const bridge = isElectron() ? window.api?.offline : null;
+export const offlineBridge = isElectron() ? window.api?.offline : null;
 
 interface OfflineState {
     entries: Record<string, OfflineEntry>;
     job: null | OfflineProgress;
+    /** The normal pages read the kept songs instead of the server (api/offline). */
+    offlineMode: boolean;
 }
 
 export const useOfflineStore = createWithEqualityFn<OfflineState>()(() => ({
     entries: {},
     job: null,
+    offlineMode: false,
 }));
 
-export const isOfflineSupported = Boolean(bridge);
+export const isOfflineSupported = Boolean(offlineBridge);
 
 export const offlineKey = (serverId: string, songId: string) => `${serverId}/${songId}`;
 
 export const getOfflineEntry = (song: Pick<Song, '_serverId' | 'id'>) =>
     useOfflineStore.getState().entries[offlineKey(song._serverId, song.id)];
+
+export const isOfflineMode = () => useOfflineStore.getState().offlineMode;
+
+export const hasKeptSongs = (serverId?: string) =>
+    Object.values(useOfflineStore.getState().entries).some(
+        (entry) => !serverId || entry.serverId === serverId,
+    );
 
 export const useIsKept = (song: Pick<Song, '_serverId' | 'id'> | undefined) =>
     useOfflineStore((state) =>
@@ -52,27 +57,51 @@ export const entryToSong = (entry: OfflineEntry): Song => {
     };
 };
 
-// cover id (the song's image id or its album id) -> local cover, for images that only know an id
+/** Every kept song of one server, in no particular order. */
+export const getKeptSongs = (serverId: string): Song[] =>
+    Object.values(useOfflineStore.getState().entries)
+        .filter((entry) => entry.serverId === serverId)
+        .map(entryToSong);
+
+// image id (a song's cover id, its album or one of its artists) -> a local cover, for images that only know an id
 const coverIndex = new Map<string, string>();
 
-/** Local cover for an image id of a kept song or album, if one was saved. */
+/** Local cover for an image id of a kept song, album or artist, if one was saved. */
 export const getOfflineCoverUrl = (serverId: string | undefined, id: string) =>
     serverId ? coverIndex.get(offlineKey(serverId, id)) : undefined;
 
 const refresh = async () => {
-    if (!bridge) return;
-    const list = await bridge.list();
+    if (!offlineBridge) return;
+    const list = await offlineBridge.list();
     coverIndex.clear();
     for (const entry of list) {
         if (!entry.cover) continue;
         const local = offlineUrl('cover', entry.serverId, entry.songId);
-        for (const id of [entry.song.imageId, entry.song.albumId]) {
-            if (id) coverIndex.set(offlineKey(entry.serverId, String(id)), local);
+        const song = entry.song as Song;
+        const ids = [
+            song.imageId,
+            song.albumId,
+            ...(song.albumArtists ?? []).map((artist) => artist.id),
+            ...(song.artists ?? []).map((artist) => artist.id),
+        ];
+        for (const id of ids) {
+            const key = id ? offlineKey(entry.serverId, String(id)) : null;
+            if (key && !coverIndex.has(key)) coverIndex.set(key, local);
         }
     }
     useOfflineStore.setState({
         entries: Object.fromEntries(list.map((entry) => [entry.key, entry])),
     });
+    // in offline mode the pages show what is kept: refresh them when that changes
+    if (isOfflineMode()) queryClient.invalidateQueries();
+};
+
+/** Turns the offline library on or off: the pages read the kept songs (or the server) from now on. */
+export const setOfflineMode = (on: boolean) => {
+    if (useOfflineStore.getState().offlineMode === on) return;
+    useOfflineStore.setState({ offlineMode: on });
+    queryClient.clear();
+    queryClient.invalidateQueries();
 };
 
 const errorMessage = (progress: OfflineProgress) => {
@@ -88,10 +117,10 @@ const errorMessage = (progress: OfflineProgress) => {
     }
 };
 
-if (bridge) {
+if (offlineBridge) {
     refresh();
-    bridge.onChange(refresh);
-    bridge.onProgress((progress) => {
+    offlineBridge.onChange(refresh);
+    offlineBridge.onProgress((progress) => {
         const finished = progress.status !== 'running';
         useOfflineStore.setState({ job: finished ? null : progress });
         if (!finished) return;
@@ -110,54 +139,13 @@ if (bridge) {
     });
 }
 
-let currentJobId: null | string = null;
-
-/** Copies the songs that are not kept yet. One job at a time: songs wait their turn in the same job. */
-export const keepSongsOffline = async (songs: Song[]) => {
-    if (!bridge || songs.length === 0) return;
-    const { entries } = useOfflineStore.getState();
-
-    const items: OfflineKeepItem[] = songs
-        .filter((song) => !entries[offlineKey(song._serverId, song.id)])
-        .map((song) => ({
-            coverKey: song.albumId || song.id,
-            coverUrl:
-                api.controller.getImageUrl({
-                    apiClientProps: { serverId: song._serverId },
-                    query: {
-                        id: song.imageId || song.albumId || song.id,
-                        itemType: LibraryItem.SONG,
-                        size: 600,
-                    },
-                }) || null,
-            downloadUrl: api.controller.getDownloadUrl({
-                apiClientProps: { serverId: song._serverId },
-                query: { id: song.id },
-            }),
-            serverId: song._serverId,
-            song: song as unknown as Record<string, any>,
-        }));
-
-    if (items.length === 0) {
-        toast.info({ message: i18n.t('mubox.offline.alreadyKept') });
-        return;
-    }
-    if (useOfflineStore.getState().job) {
-        toast.info({ message: i18n.t('mubox.offline.busy') });
-        return;
-    }
-
-    currentJobId = nanoid();
-    toast.info({ message: i18n.t('mubox.offline.started', { count: items.length }) });
-    await bridge.keep(currentJobId, items);
-};
-
 export const cancelKeepOffline = () => {
-    if (bridge && currentJobId) bridge.cancel(currentJobId);
+    const job = useOfflineStore.getState().job;
+    if (offlineBridge && job) offlineBridge.cancel(job.jobId);
 };
 
 export const removeKept = async (target: { all?: boolean; keys?: string[] }) => {
-    if (!bridge) return;
-    const count = await bridge.remove(target);
+    if (!offlineBridge) return;
+    const count = await offlineBridge.remove(target);
     toast.success({ message: i18n.t('mubox.offline.removed', { count }) });
 };

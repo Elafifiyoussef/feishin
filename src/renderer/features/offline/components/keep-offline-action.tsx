@@ -2,9 +2,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { keepSongsOffline } from '/@/renderer/features/offline/offline-keep';
 import {
     isOfflineSupported,
-    keepSongsOffline,
     offlineKey,
     removeKept,
     useOfflineStore,

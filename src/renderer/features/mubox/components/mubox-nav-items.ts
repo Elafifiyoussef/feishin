@@ -3,8 +3,6 @@ import { AppIconSelection } from '/@/shared/components/icon/icon';
 
 export interface MuboxNavItem {
     adminOnly: boolean;
-    /** Shown on the desktop app for any server (kept songs need no mubox). */
-    desktopOnly?: boolean;
     icon: AppIconSelection;
     id: string;
     labelKey: string;
@@ -26,14 +24,6 @@ export const muboxNavItems: MuboxNavItem[] = [
         id: 'trash',
         labelKey: 'mubox.nav.trash',
         to: MuboxPath.TRASH,
-    },
-    {
-        adminOnly: false,
-        desktopOnly: true,
-        icon: 'server',
-        id: 'offline',
-        labelKey: 'mubox.nav.offline',
-        to: MuboxPath.OFFLINE,
     },
     {
         adminOnly: true,
