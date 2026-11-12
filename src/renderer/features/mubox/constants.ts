@@ -8,7 +8,6 @@ import { useAuthStore } from '/@/renderer/store/auth.store';
 /** Router (hash) paths owned by this feature. */
 export const MuboxPath = {
     DOWNLOAD: '/mubox/download',
-    OFFLINE: '/mubox/offline',
     ROOT: '/mubox',
     TRASH: '/mubox/trash',
     USERS: '/mubox/users',

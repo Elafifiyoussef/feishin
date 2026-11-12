@@ -283,16 +283,13 @@ export const muboxEn = {
         users: 'Accounts',
     },
     offline: {
-        albums: 'Albums',
         alreadyKept: 'Already kept offline.',
-        busy: 'Another copy is still running. Wait for it or cancel it on the Offline page.',
+        autoOn: 'The server is not reachable. Showing the songs kept on this device.',
+        busy: 'Another copy is still running. Wait for it or cancel it in the Offline dialog.',
         canceled_one: 'Stopped. {{count}} song was kept.',
         canceled_other: 'Stopped. {{count}} songs were kept.',
         done_one: '{{count}} song kept offline.',
         done_other: '{{count}} songs kept offline.',
-        empty: 'Nothing kept offline yet',
-        emptyDescription:
-            'Right-click a song, album or playlist and choose "Keep offline" to save a copy on this device.',
         errors: {
             diskFull:
                 'The disk is full. Free some space and try again; songs already kept are safe.',
@@ -303,23 +300,26 @@ export const muboxEn = {
         },
         keep: 'Keep offline',
         kept: 'Kept offline',
-        noMatch: 'No kept songs match',
+        manageHint:
+            'Right-click a song, album or playlist and choose Keep offline to save a copy on this device.',
+        mode: 'Use the offline library',
+        modeHint:
+            'The normal pages show only the songs kept on this device and play them without the server.',
+        needsServer: 'Turn off the offline library to keep more songs: copying needs the server.',
+        notAvailable: 'This is not available in the offline library.',
         progress: 'Keeping songs offline: {{done}} of {{total}}',
         removeAll: 'Remove all',
         removeCopy: 'Remove offline copy',
         removed_one: '{{count}} offline copy removed.',
         removed_other: '{{count}} offline copies removed.',
-        search: 'Search kept songs',
-        songCount_one: '{{count}} song',
-        songCount_other: '{{count}} songs',
-        songs: 'Songs',
         space_one: '{{count}} song, {{size}} used',
         space_other: '{{count}} songs, {{size}} used',
         started_one: 'Keeping {{count}} song offline...',
         started_other: 'Keeping {{count}} songs offline...',
         title: 'Offline',
-        unknownAlbum: 'Unknown album',
+        useLibrary: 'Use the offline library',
     },
+
     pages: {
         download: { title: 'Downloader' },
         trash: { title: 'Trash' },

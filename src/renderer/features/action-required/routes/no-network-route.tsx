@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { PageHeader } from '/@/renderer/components/page-header/page-header';
 import '/@/renderer/features/mubox/i18n/register';
+import { hasKeptSongs, setOfflineMode } from '/@/renderer/features/offline/offline-store';
 import { AnimatedPage } from '/@/renderer/features/shared/components/animated-page';
 import { PageErrorBoundary } from '/@/renderer/features/shared/components/page-error-boundary';
 import { AppRoute } from '/@/renderer/router/routes';
@@ -36,13 +37,16 @@ const NoNetworkRoute = () => {
                             {t('error.noNetworkDescription')}
                         </Text>
                     </Stack>
-                    {isElectron() && (
+                    {isElectron() && hasKeptSongs() && (
                         <Button
                             leftSection={<Icon icon="server" />}
-                            onClick={() => navigate('/mubox/offline')}
+                            onClick={() => {
+                                setOfflineMode(true);
+                                navigate(AppRoute.HOME);
+                            }}
                             variant="default"
                         >
-                            {t('mubox.offline.title')}
+                            {t('mubox.offline.useLibrary')}
                         </Button>
                     )}
                     <Button

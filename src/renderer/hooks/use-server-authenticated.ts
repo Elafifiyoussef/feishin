@@ -1,4 +1,5 @@
 import { isAxiosError } from 'axios';
+import i18n from 'i18next';
 import isElectron from 'is-electron';
 import debounce from 'lodash/debounce';
 import isEqual from 'lodash/isEqual';
@@ -7,6 +8,7 @@ import { useNavigate } from 'react-router';
 
 import { api } from '/@/renderer/api';
 import { controller } from '/@/renderer/api/controller';
+import { hasKeptSongs, setOfflineMode } from '/@/renderer/features/offline/offline-store';
 import { AppRoute } from '/@/renderer/router/routes';
 import { getServerById, useAuthStoreActions, useCurrentServerId } from '/@/renderer/store';
 import { logger } from '/@/renderer/utils/logger';
@@ -290,6 +292,14 @@ export const useServerAuthenticated = () => {
                         serverName: serverWithAuth.name,
                         serverType: serverWithAuth.type,
                     });
+
+                    // songs kept on this device: show those instead of a dead end (desktop app)
+                    if (hasKeptSongs(serverWithAuth.id)) {
+                        setOfflineMode(true);
+                        toast.info({ message: i18n.t('mubox.offline.autoOn') as string });
+                        setReady(AuthState.VALID);
+                        return;
+                    }
 
                     // Don't clear credentials on network failure - preserve them for when network returns
                     setReady(AuthState.INVALID);

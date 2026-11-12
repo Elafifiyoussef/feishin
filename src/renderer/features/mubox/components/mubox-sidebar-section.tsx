@@ -6,6 +6,11 @@ import {
     useMuboxAccess,
     useMuboxCoverSession,
 } from '/@/renderer/features/mubox/hooks/use-mubox-access';
+import {
+    OfflineCollapsedEntry,
+    OfflineSidebarEntry,
+} from '/@/renderer/features/offline/components/offline-sidebar-entry';
+import { isOfflineSupported } from '/@/renderer/features/offline/offline-store';
 import '/@/renderer/features/mubox/i18n/register';
 import { CollapsedSidebarItem } from '/@/renderer/features/sidebar/components/collapsed-sidebar-item';
 import { SidebarItem } from '/@/renderer/features/sidebar/components/sidebar-item';
@@ -37,11 +42,13 @@ export const MuboxSidebarSection = ({ variant = 'expanded' }: MuboxSidebarSectio
     // the sidebar is always mounted, so it keeps the cover cookie fresh for every mubox page
     useMuboxCoverSession();
 
-    if (items.length === 0) return null;
+    // kept songs (offline library) exist on the desktop app for every server, mubox or not
+    if (items.length === 0 && !isOfflineSupported) return null;
 
     if (variant === 'collapsed') {
         return (
             <>
+                {isOfflineSupported && <OfflineCollapsedEntry />}
                 {items.map((item) => (
                     <CollapsedSidebarItem
                         activeIcon={<Icon color="primary" icon={item.icon} size="2xl" />}
@@ -65,6 +72,7 @@ export const MuboxSidebarSection = ({ variant = 'expanded' }: MuboxSidebarSectio
                 </Text>
             </Accordion.Control>
             <Accordion.Panel>
+                {isOfflineSupported && <OfflineSidebarEntry />}
                 {items.map((item) => (
                     <SidebarItem key={item.id} to={item.to}>
                         <Group gap="md">
