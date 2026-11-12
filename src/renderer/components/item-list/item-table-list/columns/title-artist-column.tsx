@@ -13,6 +13,7 @@ import {
 } from '/@/renderer/components/item-list/item-table-list/item-table-list-column';
 import { useIsActiveRow } from '/@/renderer/components/item-list/item-table-list/item-table-list-context';
 import { JoinedArtists } from '/@/renderer/features/albums/components/joined-artists';
+import { OfflineBadge } from '/@/renderer/features/offline/components/offline-badge';
 import { ExplicitIndicator } from '/@/shared/components/explicit-indicator/explicit-indicator';
 import { Icon } from '/@/shared/components/icon/icon';
 import { Text } from '/@/shared/components/text/text';
@@ -139,6 +140,7 @@ export const QueueSongTitleArtistColumn = (props: ItemTableListInnerColumn) => {
                     >
                         <ExplicitIndicator explicitStatus={song?.explicitStatus} />
                         {row.name as string}
+                        <OfflineBadge song={song} />
                         {song?.trackSubtitle && props.itemType !== LibraryItem.QUEUE_SONG && (
                             <Text
                                 className={clsx({

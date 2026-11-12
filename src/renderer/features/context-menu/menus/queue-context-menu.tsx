@@ -15,6 +15,7 @@ import { ShareAction } from '/@/renderer/features/context-menu/actions/share-act
 import { ShowInFileExplorerAction } from '/@/renderer/features/context-menu/actions/show-in-file-explorer-action';
 import { ShuffleItemsAction } from '/@/renderer/features/context-menu/actions/shuffle-items-action';
 import { ContextMenuPreview } from '/@/renderer/features/context-menu/components/context-menu-preview';
+import { KeepOfflineAction } from '/@/renderer/features/offline/components/keep-offline-action';
 import { ContextMenu } from '/@/shared/components/context-menu/context-menu';
 import { LibraryItem, QueueSong } from '/@/shared/types/domain-types';
 
@@ -46,6 +47,7 @@ export const QueueContextMenu = ({ items }: QueueContextMenuProps) => {
             <SetRatingAction ids={ids} itemType={LibraryItem.SONG} />
             <ContextMenu.Divider />
             <DownloadAction ids={ids} />
+            <KeepOfflineAction songs={items} />
             <ShareAction ids={ids} itemType={LibraryItem.SONG} />
             <ContextMenu.Divider />
             <GoToAction items={items} />

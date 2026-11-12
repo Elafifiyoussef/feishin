@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import z from 'zod';
 
 import { api } from '/@/renderer/api';
+import { getOfflineCoverUrl } from '/@/renderer/features/offline/offline-store';
 import {
     GeneralSettingsSchema,
     getServerById,
@@ -116,6 +117,12 @@ export const useItemImageUrl = (args: UseItemImageUrlProps) => {
             return undefined;
         }
 
+        // a kept song or album has its cover saved on this device
+        const offlineCover = getOfflineCoverUrl(args.serverId || serverId, id);
+        if (offlineCover) {
+            return offlineCover;
+        }
+
         const targetServerId = args.serverId || serverId;
         let baseUrl: string | undefined;
 
@@ -151,6 +158,12 @@ export const useItemImageRequest = (args: UseItemImageUrlProps) => {
 
         if (!id) {
             return undefined;
+        }
+
+        // a kept song or album has its cover saved on this device
+        const offlineCover = getOfflineCoverUrl(args.serverId || serverId, id);
+        if (offlineCover) {
+            return { cacheKey: offlineCover, url: offlineCover } satisfies ImageRequest;
         }
 
         const targetServerId = args.serverId || serverId;
@@ -189,6 +202,11 @@ export function getItemImageRequest(args: UseItemImageUrlProps) {
 
     if (!id) {
         return undefined;
+    }
+
+    const offlineCover = getOfflineCoverUrl(serverId, id);
+    if (offlineCover) {
+        return { cacheKey: offlineCover, url: offlineCover } satisfies ImageRequest;
     }
 
     let baseUrl: string | undefined;

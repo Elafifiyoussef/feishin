@@ -12,6 +12,7 @@ import { SetRatingAction } from '/@/renderer/features/context-menu/actions/set-r
 import { ShareAction } from '/@/renderer/features/context-menu/actions/share-action';
 import { ContextMenuPreview } from '/@/renderer/features/context-menu/components/context-menu-preview';
 import { MuboxMenuGroup } from '/@/renderer/features/mubox/menu/mubox-menu-group';
+import { KeepOfflineAction } from '/@/renderer/features/offline/components/keep-offline-action';
 import { ContextMenu } from '/@/shared/components/context-menu/context-menu';
 import { Album, LibraryItem } from '/@/shared/types/domain-types';
 
@@ -39,6 +40,7 @@ export const AlbumContextMenu = ({ items, type }: AlbumContextMenuProps) => {
             <SetRatingAction ids={ids} itemType={LibraryItem.ALBUM} />
             <ContextMenu.Divider />
             <DownloadAction ids={ids} />
+            <KeepOfflineAction albumIds={ids} />
             <ShareAction ids={ids} itemType={LibraryItem.ALBUM} />
             <ContextMenu.Divider />
             <GoToAction items={items} />

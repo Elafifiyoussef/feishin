@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import { api } from '/@/renderer/api';
+import { offlineKey, useOfflineStore } from '/@/renderer/features/offline/offline-store';
 import { TranscodingConfig } from '/@/renderer/store';
 import { QueueSong } from '/@/shared/types/domain-types';
+import { offlineUrl } from '/@/shared/types/offline-types';
 
 export function useSongUrl(
     song: QueueSong | undefined,
@@ -15,8 +17,13 @@ export function useSongUrl(
         song?._serverId && current && prior.current[0] === song._uniqueId && prior.current[1],
     );
 
+    // a kept song plays from its local copy (desktop app), so it needs no server
+    const isKept = useOfflineStore((state) =>
+        song ? Boolean(state.entries[offlineKey(song._serverId, song.id)]) : false,
+    );
+
     const { data: queryStreamUrl } = useQuery({
-        enabled: Boolean(song?._serverId) && !shouldReusePrior,
+        enabled: Boolean(song?._serverId) && !shouldReusePrior && !isKept,
         queryFn: () =>
             api.controller.getStreamUrl({
                 apiClientProps: { serverId: song!._serverId },
@@ -59,6 +66,8 @@ export function useSongUrl(
             prior.current = ['', ''];
         }
     }, [song?._serverId]);
+
+    if (isKept && song && !shouldReusePrior) return offlineUrl('file', song._serverId, song.id);
 
     return shouldReusePrior ? prior.current[1] : queryStreamUrl;
 }

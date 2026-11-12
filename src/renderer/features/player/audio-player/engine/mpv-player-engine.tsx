@@ -6,8 +6,9 @@ import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { playerHandoff } from './player-handoff';
 
 import { eventEmitter } from '/@/renderer/events/event-emitter';
+import { getOfflineEntry } from '/@/renderer/features/offline/offline-store';
 import { usePlayerEvents } from '/@/renderer/features/player/audio-player/hooks/use-player-events';
-import { getSongUrl } from '/@/renderer/features/player/audio-player/hooks/use-stream-url';
+import { getSongUrl as getRemoteSongUrl } from '/@/renderer/features/player/audio-player/hooks/use-stream-url';
 import { AudioPlayer, PlayerOnProgressProps } from '/@/renderer/features/player/audio-player/types';
 import { useRadioStore } from '/@/renderer/features/radio/hooks/use-radio-player';
 import { getMpvProperties } from '/@/renderer/features/settings/components/playback/mpv-properties';
@@ -42,6 +43,10 @@ const mpvPlayerListener = isElectron() ? window.api.mpvPlayerListener : null;
 const ipc = isElectron() ? window.api.ipc : null;
 
 const PROGRESS_UPDATE_INTERVAL = 250;
+
+// mpv plays a kept song straight from its file in the app's data folder
+const getSongUrl = async (...args: Parameters<typeof getRemoteSongUrl>) =>
+    getOfflineEntry(args[0])?.file ?? getRemoteSongUrl(...args);
 
 export const MpvPlayerEngine = (props: MpvPlayerEngineProps) => {
     const {
