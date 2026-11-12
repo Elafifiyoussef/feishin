@@ -36,6 +36,10 @@
 }
 
 /* lines up with the inputs, not with their labels */
+.spacer {
+    flex: 1 1 0;
+}
+
 .submit {
     align-self: flex-end;
 }
@@ -108,7 +112,7 @@
 
 .row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 5rem;
+    grid-template-columns: minmax(0, 1fr) 7rem 5rem;
     gap: var(--theme-spacing-md);
     align-items: center;
     padding: var(--theme-spacing-sm) var(--theme-spacing-md);
@@ -147,7 +151,7 @@
 
 @container (min-width: 32rem) {
     .row {
-        grid-template-columns: minmax(0, 1fr) 5rem 9rem;
+        grid-template-columns: minmax(0, 1fr) 7rem 9rem 5rem;
     }
 
     .cell-seen {
@@ -158,4 +162,16 @@
 /* the card is the same colour as a default input: draw the edge so the field is visible */
 .field input {
     border-color: var(--theme-colors-border);
+}
+
+.cell-actions {
+    display: flex;
+    gap: var(--theme-spacing-xs);
+    justify-content: flex-end;
+}
+
+.you {
+    margin-left: var(--theme-spacing-sm);
+    font-size: var(--theme-font-size-xs);
+    color: var(--theme-colors-foreground-muted);
 }

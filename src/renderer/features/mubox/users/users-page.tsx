@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import styles from './users.module.css';
@@ -10,11 +10,16 @@ import { MuboxStateMessage } from '/@/renderer/features/mubox/components/mubox-s
 import { getMuboxApiBase } from '/@/renderer/features/mubox/constants';
 import { useMuboxAccess } from '/@/renderer/features/mubox/hooks/use-mubox-access';
 import {
+    openDeleteUserDialog,
+    openEditUserDialog,
+} from '/@/renderer/features/mubox/users/user-dialogs';
+import {
     MuboxNewUser,
     MuboxUser,
     muboxUserQueries,
     useCreateUser,
 } from '/@/renderer/features/mubox/users/users-api';
+import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
 import { Badge } from '/@/shared/components/badge/badge';
 import { Button } from '/@/shared/components/button/button';
 import { Icon } from '/@/shared/components/icon/icon';
@@ -29,7 +34,15 @@ const serverAddress = () => {
     return absolute.replace(/\/mubox$/, '');
 };
 
-const Handover = ({ onDismiss, user }: { onDismiss: () => void; user: MuboxNewUser }) => {
+const Handover = ({
+    onDismiss,
+    title,
+    user,
+}: {
+    onDismiss: () => void;
+    title: string;
+    user: MuboxNewUser;
+}) => {
     const { t } = useTranslation();
     const address = serverAddress();
 
@@ -47,7 +60,7 @@ const Handover = ({ onDismiss, user }: { onDismiss: () => void; user: MuboxNewUs
     return (
         <div className={styles.handover} role="status">
             <div className={styles.handoverHead}>
-                <span>{t('mubox.users.created', { username: user.username })}</span>
+                <span>{title}</span>
                 <Button
                     aria-label={t('mubox.users.dismiss')}
                     onClick={onDismiss}
@@ -75,12 +88,11 @@ const Handover = ({ onDismiss, user }: { onDismiss: () => void; user: MuboxNewUs
     );
 };
 
-const CreateUserCard = () => {
+const CreateUserCard = ({ onCreated }: { onCreated: (user: MuboxNewUser) => void }) => {
     const { t } = useTranslation();
     const create = useCreateUser();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [created, setCreated] = useState<MuboxNewUser | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, unknown>>({});
 
     const submit = async (event: FormEvent) => {
@@ -92,7 +104,7 @@ const CreateUserCard = () => {
                 password: password || undefined,
                 username: username.trim(),
             });
-            setCreated(user);
+            onCreated(user);
             setUsername('');
             setPassword('');
         } catch (error) {
@@ -126,6 +138,7 @@ const CreateUserCard = () => {
                         value={password}
                         variant="filled"
                     />
+                    <span className={styles.spacer} />
                     <Button
                         className={styles.submit}
                         disabled={!username.trim()}
@@ -139,7 +152,6 @@ const CreateUserCard = () => {
                 </div>
                 <span className={styles.hint}>{t('mubox.users.passwordHint')}</span>
             </form>
-            {created && <Handover onDismiss={() => setCreated(null)} user={created} />}
         </section>
     );
 };
@@ -151,7 +163,13 @@ const formatSeen = (value: null | string, never: string) => {
     return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-const UsersTable = ({ users }: { users: MuboxUser[] }) => {
+const UsersTable = ({
+    onPassword,
+    users,
+}: {
+    onPassword: (user: MuboxNewUser) => void;
+    users: MuboxUser[];
+}) => {
     const { t } = useTranslation();
 
     return (
@@ -161,6 +179,7 @@ const UsersTable = ({ users }: { users: MuboxUser[] }) => {
                     <span>{t('mubox.users.username')}</span>
                     <span>{t('mubox.users.role')}</span>
                     <span className={styles.cellSeen}>{t('mubox.users.lastSeen')}</span>
+                    <span className={styles.cellActions}>{t('mubox.users.actions')}</span>
                 </div>
             </li>
             {users.map((user) => (
@@ -173,9 +192,31 @@ const UsersTable = ({ users }: { users: MuboxUser[] }) => {
                             <Badge variant={user.admin ? 'filled' : 'default'}>
                                 {user.admin ? t('mubox.users.admin') : t('mubox.users.user')}
                             </Badge>
+                            {user.you && <span className={styles.you}>{t('mubox.users.you')}</span>}
                         </span>
                         <span className={styles.cellSeen}>
                             {formatSeen(user.last_seen, t('mubox.users.never'))}
+                        </span>
+                        <span className={styles.cellActions}>
+                            <ActionIcon
+                                aria-label={t('mubox.users.edit')}
+                                icon="edit"
+                                onClick={() => openEditUserDialog({ onPassword, user })}
+                                tooltip={{ label: t('mubox.users.edit') }}
+                                variant="subtle"
+                            />
+                            <ActionIcon
+                                aria-label={t('mubox.users.delete')}
+                                disabled={user.you}
+                                icon="delete"
+                                onClick={() => openDeleteUserDialog(user)}
+                                tooltip={{
+                                    label: user.you
+                                        ? t('mubox.users.deleteSelf')
+                                        : t('mubox.users.delete'),
+                                }}
+                                variant="subtle"
+                            />
                         </span>
                     </div>
                 </li>
@@ -187,8 +228,23 @@ const UsersTable = ({ users }: { users: MuboxUser[] }) => {
 /** Friends' accounts: the admin makes a Navidrome account without opening Navidrome (ADR-0013). */
 export const UsersPage = () => {
     const { t } = useTranslation();
+    const [handover, setHandover] = useState<null | { title: string; user: MuboxNewUser }>(null);
     const { isAdmin } = useMuboxAccess();
     const query = useQuery({ ...muboxUserQueries.list(), enabled: isAdmin });
+
+    // the box belongs to one account: drop it when that account is deleted or renamed
+    const isStale =
+        handover !== null &&
+        query.data !== undefined &&
+        !query.data.some(
+            (user) => user.id === handover.user.id && user.username === handover.user.username,
+        );
+    useEffect(() => {
+        if (isStale) setHandover(null);
+    }, [isStale]);
+
+    const showPassword = (user: MuboxNewUser) =>
+        setHandover({ title: t('mubox.users.passwordFor', { username: user.username }), user });
 
     let list;
     if (query.isLoading) {
@@ -213,13 +269,27 @@ export const UsersPage = () => {
     } else if (!query.data?.length) {
         list = <MuboxStateMessage icon="user" title={t('mubox.users.empty')} />;
     } else {
-        list = <UsersTable users={query.data} />;
+        list = <UsersTable onPassword={showPassword} users={query.data} />;
     }
 
     return (
         <MuboxPage adminOnly count={query.data?.length} title={t('mubox.pages.users.title')}>
             <div className={styles.page}>
-                <CreateUserCard />
+                <CreateUserCard
+                    onCreated={(user) =>
+                        setHandover({
+                            title: t('mubox.users.created', { username: user.username }),
+                            user,
+                        })
+                    }
+                />
+                {handover && !isStale && (
+                    <Handover
+                        onDismiss={() => setHandover(null)}
+                        title={handover.title}
+                        user={handover.user}
+                    />
+                )}
                 {list}
             </div>
         </MuboxPage>

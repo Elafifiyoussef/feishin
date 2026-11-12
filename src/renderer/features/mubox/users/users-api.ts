@@ -17,6 +17,23 @@ export interface MuboxUser {
     last_seen: null | string;
     name: string;
     username: string;
+    /** the account that is asking: it can not demote or delete itself */
+    you?: boolean;
+}
+
+export interface MuboxUserChanges {
+    admin?: boolean;
+    password?: string;
+    reset_password?: boolean;
+    username?: string;
+}
+
+/** PUT /users/{id}: the password is returned only when one was set or made up (shown once). */
+export interface MuboxUserUpdate {
+    admin: boolean;
+    id: string;
+    password?: string;
+    username: string;
 }
 
 const usersKey = [...muboxKeys.all, 'users'] as const;
@@ -35,6 +52,30 @@ export const useCreateUser = () => {
     return useMutation({
         mutationFn: (body: { password?: string; username: string }) =>
             muboxFetch<MuboxNewUser>('/users', { body, method: 'POST' }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: usersKey }),
+    });
+};
+
+export const useUpdateUser = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ changes, id }: { changes: MuboxUserChanges; id: string }) =>
+            muboxFetch<MuboxUserUpdate>(`/users/${encodeURIComponent(id)}`, {
+                body: changes,
+                method: 'PUT',
+            }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: usersKey }),
+    });
+};
+
+export const useDeleteUser = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) =>
+            muboxFetch<{ deleted: boolean; id: string; username: string }>(
+                `/users/${encodeURIComponent(id)}`,
+                { method: 'DELETE' },
+            ),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: usersKey }),
     });
 };
